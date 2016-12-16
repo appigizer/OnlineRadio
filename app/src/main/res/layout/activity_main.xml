@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    tools:context="com.example.mjstudio.internetradio.MainActivity">
+
+    <include
+        android:id="@+id/tool_bar"
+        layout="@layout/tool_bar"
+        > </include>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@color/colorPrimary"
+        android:orientation="horizontal"
+        android:layout_below="@+id/tool_bar"
+        android:id="@+id/rel"
+        >
+        <TextView
+            android:layout_width="320dp"
+            android:text="category"
+            android:textStyle="bold"
+            android:paddingLeft="15dp"
+            android:paddingTop="10dp"
+            android:textColor="#fff"
+            android:layout_gravity="center"
+
+            android:textAllCaps="true"
+            android:layout_height="40dp"
+            android:id="@+id/textView">
+        </TextView>
+
+        <ImageView
+
+            android:layout_gravity="center"
+            android:layout_width="30dp"
+            android:src="@drawable/refresh"
+            android:layout_height="25dp"
+            android:id="@+id/imageView" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_below="@+id/rel"
+        android:layout_height="wrap_content">
+        <ListView
+            android:id="@+id/list"
+            android:scrollbars="none"
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+        </ListView>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:visibility="gone"
+        android:id="@+id/layout1"
+
+        android:background="@color/colorAccent"
+        android:layout_alignParentBottom="true">
+        <TextView
+            android:id="@+id/text1"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:textColor="#fff"
+            android:paddingTop="18dp"
+            android:textSize="17dp"
+            android:descendantFocusability="blocksDescendants"
+            android:focusableInTouchMode="false"
+            android:paddingLeft="20dp"
+            android:textStyle="bold"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true" />
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:padding="5dp"
+            android:id="@+id/imageView1"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <ImageButton
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/pause"
+            android:id="@+id/imageButton1"
+            android:paddingTop="5dp"
+            android:background="@color/colorAccent"
+            android:clickable="true"
+            android:onClick="onClick"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+</RelativeLayout>

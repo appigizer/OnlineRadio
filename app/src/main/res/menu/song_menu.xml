@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:InternetRadio="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/shuffle"
+        android:icon="@drawable/rand"
+        android:orderInCategory="1"
+        InternetRadio:showAsAction="always"
+        android:title="Shuffle"/>
+
+    <item
+        android:id="@+id/end"
+        android:icon="@drawable/end"
+        android:orderInCategory="2"
+        InternetRadio:showAsAction="always"
+        android:title="End"/>
+</menu>
