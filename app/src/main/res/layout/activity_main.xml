@@ -94,12 +94,11 @@
         <ImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:src="@drawable/pause"
+
             android:id="@+id/imageButton1"
             android:paddingTop="5dp"
             android:background="@color/colorAccent"
-            android:clickable="true"
-            android:onClick="onClick"
+
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />

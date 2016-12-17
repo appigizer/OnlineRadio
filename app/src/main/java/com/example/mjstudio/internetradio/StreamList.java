@@ -2,13 +2,18 @@ package com.example.mjstudio.internetradio;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -35,6 +40,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -49,9 +56,9 @@ public class StreamList extends AppCompatActivity {
 
 
     StreamObjectList streams;
-    Integer integer;
+
     Realm realm;
-    int toogle=0,back=0;
+    int toogle=0,red=0,period,mediaplayer;
     ImageView imageview;
     RealmResults<StreamObjectList> results,layout,streamsresult;
     private ProgressDialog pDialog;
@@ -60,49 +67,31 @@ public class StreamList extends AppCompatActivity {
     ListView listView;
     TextView textview;
     ImageButton imageButton;
+    AlertDialog alertDialog;
     private Toolbar toolbar;
+    static boolean active = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.streamlist);
         intent = getIntent();
+
         SharedRadioClass.getMysingleobject().context = this;
         realm = Realm.getDefaultInstance();
         toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+        alertDialog = new AlertDialog.Builder(this).create();
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();
             }
         });
+
         imageButton = (ImageButton)findViewById(R.id.imageButton);
-        imageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(toogle == 0)
-                {
-                    ((ImageButton) v).setImageResource(R.drawable.play1);
-                    toogle=1;
-                    //startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-2));
-                    Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-2);
-                    serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                    startService(serviceIntent);
-                }
-                else if(toogle == 1)
-                {
-                    ((ImageButton) v).setImageResource(R.drawable.pause);
-                    toogle=0;
-//            startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-1));
-                    Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-1);
-                    serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                    startService(serviceIntent);
-                }
-            }
-        });
         imageview  = (ImageView)findViewById(R.id.imageView1);
         textview = (TextView)findViewById(R.id.text1);
         results = realm.where(StreamObjectList.class).findAll();
@@ -154,6 +143,7 @@ public class StreamList extends AppCompatActivity {
 
         stationAdapter = new ArrayStationAdapter(this,category_id);
         listView.setAdapter(stationAdapter);
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -162,6 +152,7 @@ public class StreamList extends AppCompatActivity {
                 layout =  realm.where(StreamObjectList.class).equalTo("catid",category_id).findAll();
                 index = layout.get(i).getImageurl();
                 name = layout.get(i).getStreamname();
+                red = i;
 
                 SharedRadioClass.getMysingleobject().url=index;
                 SharedRadioClass.getMysingleobject().streamname=name;
@@ -193,15 +184,36 @@ public class StreamList extends AppCompatActivity {
                 layout1 =  (RelativeLayout)findViewById(R.id.layout1);
                 layout1.setVisibility(View.VISIBLE);
                 imageButton.setImageResource(R.drawable.pause);
+
                 // startService(new Intent(getApplicationContext(),RadioService.class).putExtra("position",i).putExtra("category",category_id));
                 Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",i).putExtra("category",category_id);
                 serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
                 startService(serviceIntent);
+                final Handler ha=new Handler();
+                ha.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        period = SharedRadioClass.getMysingleobject().alertbox;
+                        if(period != 1)
+                        {
+                            if(active == true) {
+                                activeProgressDialog();
+                                SharedRadioClass.getMysingleobject().redurl = red;
+                                SharedRadioClass.getMysingleobject().category = Integer.parseInt(category_id);
+                                stationAdapter.updateData();
+                                SharedRadioClass.getMysingleobject().alertbox = 1;
+                            }
+                        }
+                        SharedRadioClass.getMysingleobject().alertbox = 0;
+                    }
+                }, 15000);
             }
         });
 
 
     }
+
+
 
     //    public void onClick(View v) {
 //        if(toogle == 0)
@@ -264,6 +276,7 @@ public class StreamList extends AppCompatActivity {
                 for (Map<String, Object> stream : mapArrayList){
                     streams = realm.createObject(StreamObjectList.class);
                     streams.setCatId(category_id.toString());
+                    streams.setRedurl("http://icons.iconarchive.com/icons/icons-land/play-stop-pause/256/Record-Normal-Red-icon.png");
                     streams.setStreamname((String) stream.get("name"));
                     streams.setStreamId((String) stream.get("id").toString());
                     ArrayList<Map<String, Object>> mapArrayList1 = (ArrayList<Map<String, Object>>) stream.get("streams");
@@ -274,8 +287,9 @@ public class StreamList extends AppCompatActivity {
                     Map<String,Object> imageurl = (Map<String, Object>) stream.get("image");
                     streams.setImageurl((String) imageurl.get("url"));
                     Log.d("URL","URL"+imageurl.get("url"));
-
-                }
+                   // http://icons.iconarchive.com/icons/icons-land/play-stop-pause/256/Record-Normal-Red-icon.png
+                    //http://www.iconsdb.com/icons/preview/green/circle-xxl.png
+           }
 
                 realm.commitTransaction();
                 stationAdapter.updateData();
@@ -367,9 +381,74 @@ public class StreamList extends AppCompatActivity {
             imageview.setOnClickListener(null);
             layout1 = (RelativeLayout) findViewById(R.id.layout1);
             layout1.setVisibility(View.VISIBLE);
+            imageButton = (ImageButton)findViewById(R.id.imageButton);
+            imageButton.setImageResource(R.drawable.pause);
+            mediaplayer = SharedRadioClass.getMysingleobject().mediaplayer;
+            if(mediaplayer == 1)
+            {
+                imageButton.setImageResource(R.drawable.pause);
+
+            }
+            else if(mediaplayer ==0)
+            {
+                imageButton.setImageResource(R.drawable.play1);
+            }
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(toogle == 0)
+                    {
+                        ((ImageButton) v).setImageResource(R.drawable.play1);
+                        toogle=1;
+                        //startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-2));
+                        Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-2);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    }
+                    else if(toogle == 1)
+                    {
+                        ((ImageButton) v).setImageResource(R.drawable.pause);
+                        toogle=0;
+//            startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-1));
+                        Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-1);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    }
+                }
+            });
+
+
 
         }
         super.onResume();
 
     }
+    protected void activeProgressDialog() {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.dialog));
+
+        dialog.setIcon(R.drawable.radio);
+        dialog.setTitle(name);
+        dialog.setMessage("Stream not Available.....");
+        dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.setCancelable(false);
+        dialog.show();
+
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
+        active = true;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        active = false;
+    }
+
 }

@@ -12,6 +12,8 @@ public class StreamObjectList extends RealmObject {
     private String imageurl;
     private String streamname;
     private  String catid;
+    private  String greenurl;
+    private  String redurl;
 
     public String getImageurl ()
     {
@@ -21,7 +23,6 @@ public class StreamObjectList extends RealmObject {
     {
         return id;
     }
-
     public void setStreamId (String id) {
         this.id = id;
     }
@@ -29,21 +30,17 @@ public class StreamObjectList extends RealmObject {
     {
         return catid;
     }
-
     public void setCatId (String catid) {
         this.catid = catid;
     }
-
     public void setImageurl (String imageurl)
     {
         this.imageurl = imageurl;
     }
-
     public String getStreamurl ()
     {
         return streamurl;
     }
-
     public void setStreamurl (String streamurl)
     {
         this.streamurl = streamurl;
@@ -52,9 +49,24 @@ public class StreamObjectList extends RealmObject {
     {
         return streamname;
     }
-
     public void setStreamname (String streamname)
     {
         this.streamname = streamname;
+    }
+    public String getGreenurlurl ()
+    {
+        return greenurl;
+    }
+    public void setGreenurl (String greenurl)
+    {
+        this.greenurl = greenurl;
+    }
+    public String getRedurl ()
+    {
+        return redurl;
+    }
+    public void setRedurl (String redurl)
+    {
+        this.redurl = redurl;
     }
 }

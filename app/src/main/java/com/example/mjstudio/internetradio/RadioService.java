@@ -7,6 +7,7 @@ import android.app.Service;
 import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -16,6 +17,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
@@ -24,10 +26,12 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 import static android.R.attr.action;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Created by mjstudio on 08/12/16.
@@ -39,7 +43,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
     String url,title,position,streamname;
     int out=0;
-    long tStart,tEnd,tDelta;
+    int period = 0;
     Notification status;
     int section,pos;
     RealmResults<StreamObjectList> results;
@@ -58,12 +62,13 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     {
 
 
+
         realm = Realm.getDefaultInstance();
         results = realm.where(StreamObjectList.class).equalTo("catid",position).findAll();
         url = results.get(section).getStreamurl();
         streamname = results.get(section).getStreamname();
 
-        Log.d("category","indexurl"+url);
+
 
         out=1;
         if (player.isPlaying()) {
@@ -79,7 +84,9 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         player.prepareAsync();
+
     }
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void pausePlayer(){
@@ -115,7 +122,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
             else {
                 initRadioPlayer();
                 Toast.makeText(this, "please wait stream is preparing...", Toast.LENGTH_SHORT).show();
-                long tStart = System.currentTimeMillis();
+
             }
 
 
@@ -125,12 +132,14 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
         } else if (intent.getAction().equals(Constants.ACTION.PLAY_ACTION)) {
             if(player.isPlaying()) {
                 pausePlayer();
+                SharedRadioClass.getMysingleobject().mediaplayer = 0;
                 RemoteViews views = new RemoteViews(getPackageName(),
                         R.layout.status_bar);
                 RemoteViews bigViews = new RemoteViews(getPackageName(),
                         R.layout.staus_bar_expanded);
 
                 Intent notificationIntent = new Intent(this, MainActivity.class);
+
                 notificationIntent.setAction(Constants.ACTION.MAIN_ACTION);
                 notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                         | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -192,6 +201,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
             else
             {
                 player.start();
+                SharedRadioClass.getMysingleobject().mediaplayer = 1;
                 RemoteViews views = new RemoteViews(getPackageName(),
                         R.layout.status_bar);
                 RemoteViews bigViews = new RemoteViews(getPackageName(),
@@ -268,9 +278,11 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
 
         } else if (intent.getAction().equals(Constants.ACTION.STOPFOREGROUND_ACTION)) {
+            Log.d("Check", "value321===========" + songs);
             stopForeground(true);
             stopSelf();
             System.exit(0);
+
         }
 
         return START_NOT_STICKY;
@@ -298,7 +310,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
         player.setOnErrorListener(this);
 
 //        songs = ShareRadioClass.getMysingleobject().streamUrlList;
-        Log.d("Check", "value===========" + songs);
+
         startMusicPlayer();
     }
 
@@ -306,12 +318,11 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-
-        tEnd = System.currentTimeMillis();
-        tDelta = tEnd - tStart;
-        double elapsedSeconds = tDelta / 1000.0;
-        Log.d("category","indexurl"+elapsedSeconds);
+        SharedRadioClass.getMysingleobject().alertbox=1;
+        Log.d("category","indexurl"+"rahul");
         mediaPlayer.start();
+
+
         showNotification();
 
 //        Intent notIntent = new Intent(this, MainActivity.class);

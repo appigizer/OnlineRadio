@@ -73,8 +73,7 @@
             android:paddingTop="5dp"
             android:id="@+id/imageButton"
             android:background="@color/colorAccent"
-            android:clickable="true"
-            android:onClick="onClick"
+           android:src="@drawable/pause"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />

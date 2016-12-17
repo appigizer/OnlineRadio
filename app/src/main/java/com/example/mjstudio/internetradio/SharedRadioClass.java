@@ -12,6 +12,10 @@ public class SharedRadioClass {
     private static SharedRadioClass mysingleobject = null;
    public String url;
     public  String streamname;
+    public  int alertbox;
+    public  int redurl=-1;
+    public int category=-1;
+    public  int mediaplayer=1;
     private SharedRadioClass() {
 
     }

@@ -45,7 +45,7 @@ import io.realm.RealmResults;
 public class MainActivity extends AppCompatActivity{
     ListView categorylist;
     Realm realm;
-    private static final int SECOND_ACTIVITY_RESULT_CODE = 0;
+
     private ProgressDialog pDialog;
     AdapterCategory songAdt;
     int onlyone = 0;
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity{
     ImageView imageview;
     ImageView imageView;
     ImageButton imageButton;
-    int toogle=0;
+    int toogle=0,mediaplayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,30 +70,10 @@ public class MainActivity extends AppCompatActivity{
 //        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
 //        setSupportActionBar(toolbar);
 //        getSupportActionBar().setDisplayShowTitleEnabled(true);
-        imageButton = (ImageButton)findViewById(R.id.imageButton1);
-        imageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(toogle == 0)
-                {
-                    ((ImageButton) v).setImageResource(R.drawable.play1);
-                    toogle=1;
 
-                    Intent serviceIntent = new Intent(MainActivity.this, RadioService.class).putExtra("position",-2);
-                    serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                    startService(serviceIntent);
-                }
-                else if(toogle == 1)
-                {
-                    ((ImageButton) v).setImageResource(R.drawable.pause);
-                    toogle=0;
 
-                    Intent serviceIntent = new Intent(MainActivity.this, RadioService.class).putExtra("position",-1);
-                    serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                    startService(serviceIntent);
-                }
-            }
-        });
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         if(toolbar != null) {
             setSupportActionBar(toolbar);
@@ -300,10 +280,45 @@ public class MainActivity extends AppCompatActivity{
                     }
                 }
             }
+            imageButton = (ImageButton)findViewById(R.id.imageButton1);
+            imageButton.setImageResource(R.drawable.pause);
+            mediaplayer = SharedRadioClass.getMysingleobject().mediaplayer;
+            if(mediaplayer == 1)
+            {
+                imageButton.setImageResource(R.drawable.pause);
+
+            }
+            else if(mediaplayer == 0)
+            {
+                imageButton.setImageResource(R.drawable.play1);
+            }
             textview.setOnClickListener(null);
             imageview.setOnClickListener(null);
             layout1 = (RelativeLayout) findViewById(R.id.layout1);
             layout1.setVisibility(View.VISIBLE);
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(toogle == 0)
+                    {
+                        ((ImageButton) v).setImageResource(R.drawable.play1);
+                        toogle=1;
+                        SharedRadioClass.getMysingleobject().mediaplayer=1;
+                        Intent serviceIntent = new Intent(MainActivity.this, RadioService.class).putExtra("position",-2);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    }
+                    else if(toogle == 1)
+                    {
+                        ((ImageButton) v).setImageResource(R.drawable.pause);
+                        toogle=0;
+                        SharedRadioClass.getMysingleobject().mediaplayer=0;
+                        Intent serviceIntent = new Intent(MainActivity.this, RadioService.class).putExtra("position",-1);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    }
+                }
+            });
 
         }
         super.onResume();
