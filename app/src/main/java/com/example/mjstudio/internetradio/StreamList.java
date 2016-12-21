@@ -1,19 +1,12 @@
 package com.example.mjstudio.internetradio;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -23,25 +16,22 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -52,38 +42,49 @@ import io.realm.RealmResults;
 
 public class StreamList extends AppCompatActivity {
     Intent intent;
-    public String category_id,categoryname,url,index,name,catname,data1,data2,streamname,streamurl;
-
-
-    StreamObjectList streams;
-
+    public String category_id, categorynamefor, streamurlforstream, streamurlindex,streamurlname, streamname,streamurl;
+    StreamEntity streamsEntity;
     Realm realm;
-    int toogle=0,red=0,period,mediaplayer;
-    ImageView imageview;
-    RealmResults<StreamObjectList> results,layout,streamsresult;
+    int toogleforplaypausebutton = 0, redimagefornotplayingsong =0, checkforalertbox, checkforplayerisonoroff,setmadiavalueonpause;
+    ImageView imageviewforimageandtitle;
+    RealmResults<StreamEntity> databaseresults, databaselayoutresult, databasestreamsresult;
     private ProgressDialog pDialog;
     ArrayStationAdapter stationAdapter;
-    RelativeLayout layout1;
-    ListView listView;
-    TextView textview;
-    ImageButton imageButton;
-    AlertDialog alertDialog;
+    RelativeLayout layout1forimageandtitle;
+    ListView listViewforstreamtitleandimage;
+    TextView textviewforstreamtitle;
+    ImageButton imageButtonforplaypause;
     private Toolbar toolbar;
-    static boolean active = false;
+    String globalUrl;
+    AlertDialog alertDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.streamlist);
-        intent = getIntent();
 
-        SharedRadioClass.getMysingleobject().context = this;
+        //initialize the database
         realm = Realm.getDefaultInstance();
-        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
+        databaseresults = realm.where(StreamEntity.class).findAll();
+
+        //get streamname and streamurl send by the MainActivityClass
+        intent = getIntent();
+        category_id = intent.getStringExtra("Categoryindex");
+        categorynamefor = intent.getStringExtra("Categoryname");
+
+        //set the category name in toolbar
+        final TextView textView = (TextView)findViewById(R.id.textViewfor_toolbarcategoryname);
+        textView.setText(categorynamefor);
+
+        //initialize the SharedRadioClass
+        SharedRadioClass.getMysingleobject().context = this;
+
+        //set the toolbar
+        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the databaselayoutresult to the toolbar object
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        alertDialog = new AlertDialog.Builder(this).create();
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,271 +92,135 @@ public class StreamList extends AppCompatActivity {
             }
         });
 
-        imageButton = (ImageButton)findViewById(R.id.imageButton);
-        imageview  = (ImageView)findViewById(R.id.imageView1);
-        textview = (TextView)findViewById(R.id.text1);
-        results = realm.where(StreamObjectList.class).findAll();
-        category_id = intent.getStringExtra("Categoryindex");
-        Log.d("Background Task", "data321=============>>" + category_id);
-        categoryname = intent.getStringExtra("Categoryname");
-        data1 = intent.getStringExtra("data1");
-        data2 = intent.getStringExtra("data2");
-        Log.d("value","data321"+data1+","+data2);
-        if(data1 != null && data2 != null)
-        {
-            textview.setText(data1);
-            if (data2 != null) {
-                String url = data2;
-
-                if (url == null) {
-                    URI uri1;
-                    try {
-                        uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                        Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageview);
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        URI uri = new URI(data2);
-                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageview);
-
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
+        //handle the play and pause button
+        imageButtonforplaypause = (ImageButton)findViewById(R.id.imageButtonforplayandpauseimage);
+        imageButtonforplaypause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(toogleforplaypausebutton == 0)
+                {
+                    ((ImageButton) v).setImageResource(R.drawable.play1);
+                    toogleforplaypausebutton =1;
+                    Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-2);
+                    serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                    startService(serviceIntent);
+                }
+                else if(toogleforplaypausebutton == 1)
+                {
+                    ((ImageButton) v).setImageResource(R.drawable.pause);
+                    toogleforplaypausebutton =0;
+                    Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-1);
+                    serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                    startService(serviceIntent);
                 }
             }
-            layout1 =  (RelativeLayout)findViewById(R.id.layout1);
-            layout1.setVisibility(View.VISIBLE);
-        }
-////        integer = Integer.parseInt(category_id);
-        listView = (ListView) findViewById(R.id.stream_list);
-        final TextView textView = (TextView)findViewById(R.id.textView);
-        textView.setText(categoryname);
-        streamsresult = realm.where(StreamObjectList.class).equalTo("catid", category_id).findAll();
-        if(streamsresult.isEmpty())
-        {
-            catname = category_id;
-            url = "http://api.dirble.com/v2/category/" + (category_id) + "/stations?token=3d4764dcfedc50c561564a45d1";
-            PlayerTask placesTask = new PlayerTask();
-            placesTask.execute(url);
-        }
+        });
 
+        //initialize listview and the set the adapter
+        listViewforstreamtitleandimage = (ListView) findViewById(R.id.listViewforshowingstreamsname);
         stationAdapter = new ArrayStationAdapter(this,category_id);
-        listView.setAdapter(stationAdapter);
+        listViewforstreamtitleandimage.setAdapter(stationAdapter);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        imageviewforimageandtitle = (ImageView)findViewById(R.id.imageViewforstreamimage);
+        textviewforstreamtitle = (TextView)findViewById(R.id.textViewforstreamname);
+
+        //get the category id which is send by the MainActivity and call the volley liabrary for getting the stream json firsttime
+        //next time fetch the data from database
+        databasestreamsresult = realm.where(StreamEntity.class).equalTo("catid", category_id).findAll();
+        if(databasestreamsresult.isEmpty())
+        {
+            globalUrl = SharedRadioClass.getMysingleobject().globalurl;
+            streamurlforstream = globalUrl+"category/"+category_id + "/stations?token=3d4764dcfedc50c561564a45d1";
+            pDialog = new ProgressDialog(this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            makeJsonArrayRequest(streamurlforstream);
+        }
+    }
+    @Override
+    protected void onResume() {
+        listViewforstreamtitleandimage.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                index=results.get(i).getStreamId().toString();
-//                Log.d("category","index"+index);
-                layout =  realm.where(StreamObjectList.class).equalTo("catid",category_id).findAll();
-                index = layout.get(i).getImageurl();
-                name = layout.get(i).getStreamname();
-                red = i;
 
-                SharedRadioClass.getMysingleobject().url=index;
-                SharedRadioClass.getMysingleobject().streamname=name;
+                //get the database result
+                databaselayoutresult =  realm.where(StreamEntity.class).equalTo("catid",category_id).findAll();
+                streamurlindex = databaselayoutresult.get(i).getImageurl();
+                streamurlname = databaselayoutresult.get(i).getStreamname();
+                redimagefornotplayingsong = i;
 
-                textview.setText(name);
-                textview.setOnClickListener(null);
-                imageview.setOnClickListener(null);
-                if (layout != null) {
-                    String url = index;
+                //set the streamurl and name in Sharedclass url and streamname
+                SharedRadioClass.getMysingleobject().url= streamurlindex;
+                SharedRadioClass.getMysingleobject().streamname= streamurlname;
+
+                textviewforstreamtitle.setText(streamurlname);
+
+                //set the onclick listner false textview and imageview of the  layout1forimageandtitle
+                textviewforstreamtitle.setOnClickListener(null);
+                imageviewforimageandtitle.setOnClickListener(null);
+
+                if (databaselayoutresult != null) {
+                    String url = streamurlindex;
 
                     if (url == null) {
                         URI uri1;
                         try {
                             uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                            Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageview);
+                            Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
                         } catch (URISyntaxException e) {
                             e.printStackTrace();
                         }
                     } else {
                         try {
-                            URI uri = new URI(index);
-                            Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageview);
+                            URI uri = new URI(streamurlindex);
+                            Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
 
                         } catch (URISyntaxException e) {
                             e.printStackTrace();
                         }
                     }
                 }
-                layout1 =  (RelativeLayout)findViewById(R.id.layout1);
-                layout1.setVisibility(View.VISIBLE);
-                imageButton.setImageResource(R.drawable.pause);
+                //show the layout when the stream is playing
+                layout1forimageandtitle =  (RelativeLayout)findViewById(R.id.layoutforhandlingplayandpause);
+                layout1forimageandtitle.setVisibility(View.VISIBLE);
 
-                // startService(new Intent(getApplicationContext(),RadioService.class).putExtra("position",i).putExtra("category",category_id));
-                Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",i).putExtra("category",category_id);
+                imageButtonforplaypause.setImageResource(R.drawable.pause);
+
+                //call the service with the sending the listview item poition and category id and also set the action which is done in notification panel
+                Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",i).putExtra("setvaluecategory",category_id).putExtra("categoryName",categorynamefor);
                 serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
                 startService(serviceIntent);
-                final Handler ha=new Handler();
-                ha.postDelayed(new Runnable() {
+
+                //show the dialog box after 10 seconds if stream is not playing
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        period = SharedRadioClass.getMysingleobject().alertbox;
-                        if(period != 1)
-                        {
-                            if(active == true) {
+                        if(!((StreamList.this).isFinishing())) {
+                            //get the value of alertbox and check
+                            checkforalertbox = SharedRadioClass.getMysingleobject().alertbox;
+                            if(checkforalertbox == 0) {
+                                //call the alertdialog function
                                 activeProgressDialog();
-                                SharedRadioClass.getMysingleobject().redurl = red;
+                                //set the red image on the rightside of the listview item for wich stream which is not playing
+                                SharedRadioClass.getMysingleobject().redimageurl = redimagefornotplayingsong;
                                 SharedRadioClass.getMysingleobject().category = Integer.parseInt(category_id);
                                 stationAdapter.updateData();
-                                SharedRadioClass.getMysingleobject().alertbox = 1;
                             }
                         }
-                        SharedRadioClass.getMysingleobject().alertbox = 0;
                     }
-                }, 15000);
+                },10000);
             }
         });
-
-
-    }
-
-
-
-    //    public void onClick(View v) {
-//        if(toogle == 0)
-//        {
-//            ((ImageButton) v).setImageResource(R.drawable.play1);
-//            toogle=1;
-//            startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-2));
-//        }
-//        else if(toogle == 1)
-//        {
-//            ((ImageButton) v).setImageResource(R.drawable.pause);
-//            toogle=0;
-//            startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-1));
-//        }
-//
-//    }
-    public class PlayerTask extends AsyncTask<String, Integer, String> {
-
-        String data = null;
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            // Showing progress dialog
-            pDialog = new ProgressDialog(StreamList.this);
-            pDialog.setMessage("Please wait...");
-            pDialog.setCancelable(false);
-            pDialog.show();
-
-        }
-        @Override
-        protected String doInBackground(String... url) {
-            try {
-                data = downloadUrl(url[0]);
-                Log.d("Background Task", "data=============>>" + data);
-
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-        @Override
-        protected void onPostExecute(String result) {
-
-            if (pDialog.isShowing()) {
-                pDialog.dismiss();
-            }
-
-            Log.d("Background ", "result=============>>" + result);
-
-            try {
-                JSONArray myListsAll = new JSONArray(result);
-
-                Map<String, Object> map = new HashMap<>();
-                map.put("jsonArray", myListsAll);
-                JSONObject myobject = new JSONObject(map);
-                Map<String, Object> maps = JSonHelper.toMap(myobject);
-                ArrayList<Map<String, Object>> mapArrayList = (ArrayList<Map<String, Object>>) maps.get("jsonArray");
-
-                realm.beginTransaction();
-                for (Map<String, Object> stream : mapArrayList){
-                    streams = realm.createObject(StreamObjectList.class);
-                    streams.setCatId(category_id.toString());
-                    streams.setRedurl("http://icons.iconarchive.com/icons/icons-land/play-stop-pause/256/Record-Normal-Red-icon.png");
-                    streams.setStreamname((String) stream.get("name"));
-                    streams.setStreamId((String) stream.get("id").toString());
-                    ArrayList<Map<String, Object>> mapArrayList1 = (ArrayList<Map<String, Object>>) stream.get("streams");
-                    for (Map<String,Object> str : mapArrayList1) {
-                        streams.setStreamurl((String) str.get("stream"));
-                        // Log.d("URL","URL"+str.get("stream"));
-                    }
-                    Map<String,Object> imageurl = (Map<String, Object>) stream.get("image");
-                    streams.setImageurl((String) imageurl.get("url"));
-                    Log.d("URL","URL"+imageurl.get("url"));
-                   // http://icons.iconarchive.com/icons/icons-land/play-stop-pause/256/Record-Normal-Red-icon.png
-                    //http://www.iconsdb.com/icons/preview/green/circle-xxl.png
-           }
-
-                realm.commitTransaction();
-                stationAdapter.updateData();
-            }
-            catch (Exception e) {
-                Log.d("Exception", e.toString());
-            }
-        }
-
-        private String downloadUrl(String strUrl) throws IOException {
-            String data = "";
-            InputStream iStream = null;
-            HttpURLConnection urlConnection = null;
-            try {
-                URL url = new URL(strUrl);
-
-                // Creating an http connection to communicate with url
-                urlConnection = (HttpURLConnection) url.openConnection();
-
-                // Connecting to url
-                urlConnection.connect();
-
-                // Reading data from url
-                iStream = urlConnection.getInputStream();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-                StringBuffer sb = new StringBuffer();
-
-                String line = "";
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                data = sb.toString();
-
-                br.close();
-
-            } catch (Exception e) {
-                //Log.d("Exception while downloading url", e.toString());
-            } finally {
-                iStream.close();
-                urlConnection.disconnect();
-            }
-            return data;
-        }
-    }
-    @Override
-    public void onBackPressed() {
-
-        super.onBackPressed();
-
-
-    }
-    @Override
-    protected void onResume() {
+        //get the streamname and imageurl showing in the layout with play and pause button
         streamname = SharedRadioClass.getMysingleobject().streamname;
         streamurl = SharedRadioClass.getMysingleobject().url;
-        Log.d("value","data321"+streamname+","+streamurl);
+
         if(streamurl != null && streamname != null){
+            imageviewforimageandtitle = (ImageView) findViewById(R.id.imageViewforstreamimage);
+            textviewforstreamtitle = (TextView) findViewById(R.id.textViewforstreamname);
 
-            Log.d("value","data321"+streamname+","+streamurl);
-
-            imageview = (ImageView) findViewById(R.id.imageView1);
-            textview = (TextView) findViewById(R.id.text1);
-            textview.setText(streamname);
+            textviewforstreamtitle.setText(streamname);
             if (streamurl != null) {
                 String url = streamurl;
 
@@ -363,92 +228,155 @@ public class StreamList extends AppCompatActivity {
                     URI uri1;
                     try {
                         uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                        Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageview);
+                        Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
                     } catch (URISyntaxException e) {
                         e.printStackTrace();
                     }
                 } else {
                     try {
                         URI uri = new URI(streamurl);
-                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageview);
+                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
 
                     } catch (URISyntaxException e) {
                         e.printStackTrace();
                     }
                 }
             }
-            textview.setOnClickListener(null);
-            imageview.setOnClickListener(null);
-            layout1 = (RelativeLayout) findViewById(R.id.layout1);
-            layout1.setVisibility(View.VISIBLE);
-            imageButton = (ImageButton)findViewById(R.id.imageButton);
-            imageButton.setImageResource(R.drawable.pause);
-            mediaplayer = SharedRadioClass.getMysingleobject().mediaplayer;
-            if(mediaplayer == 1)
+
+            textviewforstreamtitle.setOnClickListener(null);
+            imageviewforimageandtitle.setOnClickListener(null);
+
+            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+            layout1forimageandtitle.setVisibility(View.VISIBLE);
+
+            //get the checkforplayerisonoroff value which is set in the service class for handle the play and pause button
+            checkforplayerisonoroff = SharedRadioClass.getMysingleobject().setmediaplayervalue;
+            if(checkforplayerisonoroff == 1)
             {
-                imageButton.setImageResource(R.drawable.pause);
+                imageButtonforplaypause.setImageResource(R.drawable.pause);
 
             }
-            else if(mediaplayer ==0)
+            else if(checkforplayerisonoroff ==0)
             {
-                imageButton.setImageResource(R.drawable.play1);
+                imageButtonforplaypause.setImageResource(R.drawable.play1);
             }
-            imageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(toogle == 0)
-                    {
-                        ((ImageButton) v).setImageResource(R.drawable.play1);
-                        toogle=1;
-                        //startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-2));
-                        Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-2);
-                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                        startService(serviceIntent);
-                    }
-                    else if(toogle == 1)
-                    {
-                        ((ImageButton) v).setImageResource(R.drawable.pause);
-                        toogle=0;
-//            startService(new Intent(StreamList.this ,RadioService.class).putExtra("position",-1));
-                        Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-1);
-                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                        startService(serviceIntent);
-                    }
-                }
-            });
-
-
-
         }
         super.onResume();
-
     }
-    protected void activeProgressDialog() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.dialog));
+    public void makeJsonArrayRequest(String streamurl) {
+        //show the processdialog before fetching the json data fron server
+        showpDialog();
+        String urlJsonArry = streamurl;
 
+        JsonArrayRequest req = new JsonArrayRequest(urlJsonArry,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try
+                        {
+                            handleJsonResponse(response);
+                        } catch (Exception e) {
+                            Log.d("Exception", e.toString());
+                        }
+                        //hide the processdialog after fetching the json data
+                        hidepDialog();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.d("error", "Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_SHORT).show();
+                hidepDialog();
+            }
+        });
+        // Adding request to request queue
+        MyApplication.getInstance().addToRequestQueue(req);
+    }
+
+    private void handleJsonResponse(JSONArray response) {
+        try {
+            ArrayList<Map<String, Object>> mapArrayList = (ArrayList<Map<String, Object>>) JSonHelper.toList(response);
+            //set the category_id stream name,id,imageurl,redimageurln in the database
+            realm.beginTransaction();
+            for (Map<String, Object> stream : mapArrayList){
+                streamsEntity = realm.createObject(StreamEntity.class);
+                streamsEntity.setCatId(category_id.toString());
+                streamsEntity.setRedurl("http://icons.iconarchive.com/icons/icons-land/play-stop-pause/256/Record-Normal-Red-icon.png");
+                streamsEntity.setStreamname((String) stream.get("name"));
+                streamsEntity.setStreamId(stream.get("id").toString());
+                ArrayList<Map<String, Object>> mapArrayList1 = (ArrayList<Map<String, Object>>) stream.get("streams");
+                for (Map<String,Object> str : mapArrayList1) {
+                    streamsEntity.setStreamurl((String) str.get("stream"));
+                }
+                Map<String,Object> imageurl = (Map<String, Object>) stream.get("image");
+                streamsEntity.setImageurl((String) imageurl.get("url"));
+            }
+            realm.commitTransaction();
+            stationAdapter.updateData();
+        }
+        catch (Exception e) {
+            Log.d("Exception", e.toString());
+        }
+    }
+    private void showpDialog() {
+        if (!pDialog.isShowing())
+            pDialog.show();
+    }
+    private void hidepDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
+    protected void activeProgressDialog() {
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(StreamList.this, R.style.dialog);
         dialog.setIcon(R.drawable.radio);
-        dialog.setTitle(name);
+        dialog.setTitle(streamurlname);
         dialog.setMessage("Stream not Available.....");
         dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
             }
         });
-
         dialog.setCancelable(false);
-        dialog.show();
-
+        alertDialog = dialog.create();
+        Log.d("value","dat321"+checkforalertbox);
+        alertDialog.show();
     }
+
     @Override
-    public void onStart() {
-        super.onStart();
-        active = true;
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        active = false;
     }
 
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        //set the play and pause button when the activity is open and play and pause change in the notificatio panel
+        setmadiavalueonpause = SharedRadioClass.getMysingleobject().setvaluewhenonpause;
+        if(hasFocus)
+        {
+            if(setmadiavalueonpause == 1)
+            {
+                imageButtonforplaypause = (ImageButton)findViewById(R.id.imageButtonforplayandpauseimage);
+                imageButtonforplaypause.setImageResource(R.drawable.pause);
+            }
+            else if(setmadiavalueonpause == 0)
+            {
+                imageButtonforplaypause = (ImageButton)findViewById(R.id.imageButtonforplayandpauseimage);
+                imageButtonforplaypause.setImageResource(R.drawable.play1);
+
+            }
+        }
+    }
 }

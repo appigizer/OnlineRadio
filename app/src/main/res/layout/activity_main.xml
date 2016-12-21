@@ -5,7 +5,6 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context="com.example.mjstudio.internetradio.MainActivity">
 
     <include
@@ -28,19 +27,17 @@
             android:paddingTop="10dp"
             android:textColor="#fff"
             android:layout_gravity="center"
-
             android:textAllCaps="true"
             android:layout_height="40dp"
-            android:id="@+id/textView">
+            android:id="@+id/textViewfor_toolbarcategoryname">
         </TextView>
 
         <ImageView
-
             android:layout_gravity="center"
             android:layout_width="30dp"
             android:src="@drawable/refresh"
             android:layout_height="25dp"
-            android:id="@+id/imageView" />
+            android:id="@+id/imageViewfor_songimage" />
     </LinearLayout>
 
     <RelativeLayout
@@ -48,13 +45,12 @@
         android:layout_below="@+id/rel"
         android:layout_height="wrap_content">
         <ListView
-            android:id="@+id/list"
+            android:id="@+id/listViewforcategories"
             android:scrollbars="none"
             android:padding="10dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             >
-
         </ListView>
     </RelativeLayout>
 
@@ -62,12 +58,11 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:visibility="gone"
-        android:id="@+id/layout1"
-
+        android:id="@+id/layoutforhandlingplayandpause"
         android:background="@color/colorAccent"
         android:layout_alignParentBottom="true">
         <TextView
-            android:id="@+id/text1"
+            android:id="@+id/textViewforstreamname"
             android:layout_width="250dp"
             android:layout_height="60dp"
             android:textColor="#fff"
@@ -84,7 +79,7 @@
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:padding="5dp"
-            android:id="@+id/imageView1"
+            android:id="@+id/imageViewforstreamimage"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
             android:layout_alignParentTop="true"
@@ -94,11 +89,9 @@
         <ImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
-
-            android:id="@+id/imageButton1"
+            android:id="@+id/imageButtonforplayandpause"
             android:paddingTop="5dp"
             android:background="@color/colorAccent"
-
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true" />

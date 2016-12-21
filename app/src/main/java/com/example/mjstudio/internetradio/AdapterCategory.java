@@ -2,21 +2,13 @@ package com.example.mjstudio.internetradio;
 
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -27,11 +19,8 @@ import io.realm.RealmResults;
 
 public class AdapterCategory extends BaseAdapter {
     private LayoutInflater songInf;
-
-
-
     Realm realm;
-    RealmResults<Categories> categoryList;
+    RealmResults<CategoryEntity> categoryList;
 
     public AdapterCategory(Activity activity) {
         realm = Realm.getDefaultInstance();
@@ -39,9 +28,8 @@ public class AdapterCategory extends BaseAdapter {
     }
 
     public void updateData(){
-        categoryList = realm.where(Categories.class).findAll();
+        categoryList = realm.where(CategoryEntity.class).findAll();
         notifyDataSetChanged();
-
     }
 
     @Override
@@ -64,15 +52,16 @@ public class AdapterCategory extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
-        songInf=LayoutInflater.from(parent.getContext());
-       RelativeLayout songLay = (RelativeLayout) songInf.inflate(R.layout.category, parent, false);
-        //get title and artist views
-        TextView songView = (TextView)songLay.findViewById(R.id.song_category);
-        Categories categories = categoryList.get(position);
 
-        if (categories != null){
-            songView.setText(categories.getTitle());
+        songInf=LayoutInflater.from(parent.getContext());
+        RelativeLayout songLay = (RelativeLayout) songInf.inflate(R.layout.category, parent, false);
+
+        TextView songView = (TextView)songLay.findViewById(R.id.textViewfor_categoriesname);
+        CategoryEntity categoryEntity = categoryList.get(position);
+
+        if (categoryEntity != null){
+            Log.d("URL", "URLid" + categoryEntity.getTitle());
+            songView.setText(categoryEntity.getTitle());
         }
         //set position as tag
         songLay.setTag(position);

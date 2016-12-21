@@ -38,7 +38,6 @@ public class JSonHelper {
     public static boolean isEmptyObject(JSONObject object) {
         return object.names() == null;
     }
-
     public static Map<String, Object> getMap(JSONObject object, String key) throws JSONException {
         return toMap(object.getJSONObject(key));
     }

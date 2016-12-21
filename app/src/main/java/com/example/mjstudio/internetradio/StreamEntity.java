@@ -1,24 +1,30 @@
 package com.example.mjstudio.internetradio;
 
+import java.util.Map;
+
 import io.realm.RealmObject;
 
 /**
  * Created by mjstudio on 12/12/16.
  */
 
-public class StreamObjectList extends RealmObject {
+public class StreamEntity extends RealmObject {
     private String id;
     private String streamurl;
     private String imageurl;
     private String streamname;
     private  String catid;
-    private  String greenurl;
     private  String redurl;
 
     public String getImageurl ()
     {
         return imageurl;
     }
+    public void setImageurl (String imageurl)
+    {
+        this.imageurl = imageurl;
+    }
+
     public String getStreamId ()
     {
         return id;
@@ -26,6 +32,7 @@ public class StreamObjectList extends RealmObject {
     public void setStreamId (String id) {
         this.id = id;
     }
+
     public String getCatId ()
     {
         return catid;
@@ -33,10 +40,7 @@ public class StreamObjectList extends RealmObject {
     public void setCatId (String catid) {
         this.catid = catid;
     }
-    public void setImageurl (String imageurl)
-    {
-        this.imageurl = imageurl;
-    }
+
     public String getStreamurl ()
     {
         return streamurl;
@@ -45,6 +49,7 @@ public class StreamObjectList extends RealmObject {
     {
         this.streamurl = streamurl;
     }
+
     public String getStreamname ()
     {
         return streamname;
@@ -53,14 +58,7 @@ public class StreamObjectList extends RealmObject {
     {
         this.streamname = streamname;
     }
-    public String getGreenurlurl ()
-    {
-        return greenurl;
-    }
-    public void setGreenurl (String greenurl)
-    {
-        this.greenurl = greenurl;
-    }
+
     public String getRedurl ()
     {
         return redurl;
@@ -69,4 +67,6 @@ public class StreamObjectList extends RealmObject {
     {
         this.redurl = redurl;
     }
+
+
 }
