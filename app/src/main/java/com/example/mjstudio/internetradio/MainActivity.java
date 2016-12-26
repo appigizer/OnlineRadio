@@ -1,14 +1,23 @@
 package com.example.mjstudio.internetradio;
 
+
 import android.app.ProgressDialog;
+import android.app.SearchManager;
 import android.content.Intent;
+
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -19,42 +28,119 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.miguelcatalan.materialsearchview.MaterialSearchView;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity{
-    ListView listviewforcategorylist;
+public class MainActivity extends AppCompatActivity implements AdapterCategory.OnItemClickListener,SwipeRefreshLayout.OnRefreshListener{
+
     Realm realm;
     private ProgressDialog pDialog;
     AdapterCategory adapterforcategorylist;
-
+    private ArrayList<CategoryPostEntity> beanPostArrayList;
     RealmResults<CategoryEntity> databaseresults;
-    String categoryindex, categoryname, streamname,streamurl;
+    String streamname,streamurl;
     String globalUrl;
     RelativeLayout layoutforstreamimageandname;
     TextView textviewforstreamname;
     ImageView imageviewforstreamimage;
-    ImageView imageViewforrefreshbutton;
     ImageButton imageButtonforplaypause;
-    int toogleforplaypausebutton = 0, checkmediaplayervalue,setmadiavalueonpause;
+    private final String category_image_urls[] = {"https://cdn.devality.com/station/38654/influx_radio_2.jpg",
+    "https://cdn.devality.com/station/38920/Pirate_Radio_BIG_Color.jpg",
+    "https://cdn.devality.com/station/38899/90s90s_hits_600x600.png",
+    "https://cdn.devality.com/station/38921/Pirate_Radio_Talk.JPG",
+    "https://cdn.devality.com/station/38846/logo_nrp4iTunes.jpg",
+    "https://cdn.devality.com/station/38645/2_loco_radio_submissions.jpg",
+    "https://cdn.devality.com/station/38697/Koaticradio__2_.png",
+    "https://cdn.devality.com/station/38941/18_Karat_Reggae.jpg",
+    "https://cdn.devality.com/station/38550/fullblast-sq_logo.png",
+    "https://cdn.devality.com/station/38846/logo_nrp4iTunes.jpg",
+    "https://cdn.devality.com/station/38707/iHE25K6UA.jpg",
+    "https://cdn.devality.com/station/38922/livemixfiltermusic.png",
+    "https://cdn.devality.com/station/38511/amor1043banner.png",
+    "https://cdn.devality.com/station/38845/delta_heavymetal-xmas_600x600.png",
+    "https://cdn.devality.com/station/38893/LFM_Logo_Vector_Format.png",
+    "https://cdn.devality.com/station/38840/Website-Logo.png",
+    "https://cdn.devality.com/station/38651/LOGO.png",
+    "https://cdn.devality.com/station/38639/Logo-quadrato.jpg",
+    "https://cdn.devality.com/station/37793/3.png",
+    "https://cdn.devality.com/station/37958/jukeboxjpg.png",
+    "https://cdn.devality.com/station/38664/HeadFM_LOGO_300x300.png",
+    "https://cdn.devality.com/station/38057/organradio_small.jpg",
+    "https://cdn.devality.com/station/38481/Wave_FM_HD2_Logo__JPG_.jpg",
+    "https://cdn.devality.com/station/23452/AD175.png",
+    "https://cdn.devality.com/station/38677/SwirlSoundz_logo_final_symbol_web.png",
+    "https://cdn.devality.com/station/38590/rbxxlarge.png",
+    "https://cdn.devality.com/station/28100/j6Gnmx5A.jpg",
+    "https://cdn.devality.com/station/38631/1400x1400_80s80s-NDW_colored.png",
+    "https://cdn.devality.com/station/37787/ghhradio300.png",
+    "https://cdn.devality.com/station/38257/powerplayjpop16.jpg",
+    "https://cdn.devality.com/station/38661/CRLogo.png",
+    "https://cdn.devality.com/station/38781/icon_512x512_2x.png",
+    "https://cdn.devality.com/station/38415/danubius.jpg",
+    "https://cdn.devality.com/station/38869/flashback-logo.jpg",
+    "https://cdn.devality.com/station/38302/80s.jpg",
+    "https://cdn.devality.com/station/38867/nova.jpg",
+    "https://cdn.devality.com/station/38651/LOGO.png",
+    "https://cdn.devality.com/station/38308/RSH_Gold_600x600.png",
+    "https://cdn.devality.com/station/38948/A_LOGO_PERFIL.jpg",
+    "https://cdn.devality.com/station/38802/SD-01.jpg",
+    "https://cdn.devality.com/station/38726/logoRFR.jpg",
+    "https://cdn.devality.com/station/38515/p3.png",
+    "https://cdn.devality.com/station/38942/SatyaRadiosms.jpg",
+    "https://cdn.devality.com/station/38383/download.png",
+    "https://cdn.devality.com/station/28010/folkfwd-400.jpg",
+    "https://cdn.devality.com/station/28140/ALoe_Logo.png",
+    "https://cdn.devality.com/station/38844/Radio_Pic.png",
+    "https://cdn.devality.com/station/35437/radiooo.jpg",
+    "https://cdn.devality.com/station/37811/logo.jpg",
+    "https://cdn.devality.com/station/38873/tango_logo.jpg",
+    "https://cdn.devality.com/station/37922/A2O_logo__300x225_.jpg",
+    "https://cdn.devality.com/station/28336/fifties_breezes_title_image.png",
+    "https://cdn.devality.com/station/13970/Radio_Carousel_Cover_Art.jpg",
+    "https://cdn.devality.com/station/38273/kpop_girls_club.png",
+    "https://cdn.devality.com/station/37651/gaypopnewlogo.png",
+    "https://cdn.devality.com/station/38946/junction-poland-radio-logo-1600x1600px.png",
+    "https://cdn.devality.com/station/38755/b_header.jpg",
+    "https://cdn.devality.com/station/38945/REVELAvazado.png",
+    "https://cdn.devality.com/station/38946/junction-poland-radio-logo-1600x1600px.png",
+    "https://cdn.devality.com/station/19616/taal.jpg",
+    "https://cdn.devality.com/station/37787/ghhradio300.png",
+    "https://cdn.devality.com/station/27918/RADIO_88_yellow_stamp.jpg",
+    "https://cdn.devality.com/station/37937/icon.jpeg",
+    "https://cdn.devality.com/station/37878/NewMandarinLogonotag300.jpg",
+    "https://cdn.devality.com/station/12831/AirFM.png",
+    "https://cdn.devality.com/station/38623/8018_-_The_Very_Best_Of_Ambient_Music_copy__300x300_.png",
+    "https://cdn.devality.com/station/38668/Climax_Logo_-_128.png",
+    "https://cdn.devality.com/station/38330/weapon.png",
+    "https://cdn.devality.com/station/38949/Detroit-Skyline_WRJR_2015_1_for_Site.jpg",
+    "https://cdn.devality.com/station/38502/LogoRiddim.jpg",
+    "https://cdn.devality.com/station/38492/radio-logo.jpg",
+    "https://cdn.devality.com/station/38253/STR_Logo_Square-300x300.jpg",
+    "https://cdn.devality.com/station/38742/New_HOB.jpg"};
+    int toogleforplaypausebutton = 0, checkmediaplayervalue,setmadiavalueonpause,index=0,showdialog;
+    RecyclerView recyclerView;
 
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        mSwipeRefreshLayout.setOnRefreshListener(MainActivity.this);
         //initialize the realm database
         realm = Realm.getDefaultInstance();
 
@@ -63,55 +149,55 @@ public class MainActivity extends AppCompatActivity{
         if(toolbar != null) {
             setSupportActionBar(toolbar);
             getSupportActionBar().setDisplayShowTitleEnabled(false);
+
         }
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
+        ImageLoader.getInstance().init(config);
 
         //initialize listview and set the adapter
-        listviewforcategorylist = (ListView)findViewById(R.id.listViewforcategories);
+//        listviewforcategorylist = (ListView)findViewById(R.id.listViewforcategories);
+//        adapterforcategorylist = new AdapterCategory(this);
+//        listviewforcategorylist.setAdapter(adapterforcategorylist);
+        recyclerView = (RecyclerView)findViewById(R.id.listViewforcategories);
+        recyclerView.setHasFixedSize(true);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),3);
+        recyclerView.setLayoutManager(layoutManager);
         adapterforcategorylist = new AdapterCategory(this);
-        listviewforcategorylist.setAdapter(adapterforcategorylist);
+        adapterforcategorylist.listenerCategory =  this;
+        recyclerView.setAdapter(adapterforcategorylist);
+
+
+
 
         //get database results and check if data is not available in database then call the volley liabrary for getting the jsondata and put in database first time
         //next time get data from database
         databaseresults = realm.where(CategoryEntity.class).findAll();
         if(databaseresults.isEmpty()) {
-            globalUrl = SharedRadioClass.getMysingleobject().globalurl;
+           showdialog = 0;
             pDialog = new ProgressDialog(this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);
             makeJsonArrayRequest();
         }
 
-        //By clicking on the category name go to the streamlist activity with the category index,name
-        listviewforcategorylist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                categoryindex = databaseresults.get(i).getId().toString();
-                categoryname = databaseresults.get(i).getTitle().toString();
-                startActivity(new Intent(MainActivity.this,StreamList.class).putExtra("Categoryindex", categoryindex)
-                        .putExtra("Categoryname", categoryname));
-            }
-        });
-
-        //refresh image for calling the volley liabrary if any category is added
-        imageViewforrefreshbutton = (ImageView)findViewById(R.id.imageViewfor_songimage) ;
-        imageViewforrefreshbutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                pDialog = new ProgressDialog(MainActivity.this);
-                pDialog.setMessage("Please wait...");
-                pDialog.setCancelable(false);
-                makeJsonArrayRequest();
-            }
-        });
+//        //By clicking on the category name go to the streamlist activity with the category index,name
+//        listviewforcategorylist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+//                categoryindex = databaseresults.get(i).getId().toString();
+//                categoryname = databaseresults.get(i).getTitle().toString();
+//                startActivity(new Intent(MainActivity.this,StreamList.class).putExtra("Categoryindex", categoryindex)
+//                        .putExtra("Categoryname", categoryname));
+//            }
+//        });
 
     }
     public void makeJsonArrayRequest() {
         //show the dialog before getting the json response
+        if(showdialog == 0)
         showpDialog();
-
+        globalUrl = SettingsManager.getSharedInstance().globalurl;
         String urlJsonArry = globalUrl+"categories?token=3d4764dcfedc50c561564a45d1";
-
-
         JsonArrayRequest req = new JsonArrayRequest(urlJsonArry,
                 new Response.Listener<JSONArray>() {
                     @Override
@@ -121,7 +207,8 @@ public class MainActivity extends AppCompatActivity{
                         } catch (Exception e) {
                             Log.d("Exception", e.toString());
                         }
-                    //hide the process dialog agter getting the json response
+                        //hide the process dialog agter getting the json response
+                        mSwipeRefreshLayout.setRefreshing(false);
                         hidepDialog();
                     }
                 }, new Response.ErrorListener() {
@@ -135,60 +222,71 @@ public class MainActivity extends AppCompatActivity{
         // Adding request to request queue
         MyApplication.getInstance().addToRequestQueue(req);
     }
-
     private void handleJsonResponse(JSONArray response) {
-        try {
-            ArrayList<Map<String, Object>> mapArrayList = (ArrayList<Map<String, Object>>) JSonHelper.toList(response);
-            realm.beginTransaction();
-            for (Map<String, Object> category : mapArrayList) {
-                String id = String.valueOf(category.get("id"));
-                CategoryEntity categoryEntity = realm.where(CategoryEntity.class).equalTo("id", id).findFirst();
-                if(categoryEntity == null) {
-                    //chek if categoryEntity is null then create new realm object and store title and id in the database
-                    categoryEntity = realm.createObject(CategoryEntity.class);
-                    categoryEntity.updateWithData(category);
-                }
+
+        //   ArrayList<Map<String, Object>> mapArrayList = (ArrayList<Map<String, Object>>) JSonHelper.toList(response);
+
+//            for (Map<String, Object> category : mapArrayList) {
+//                String id = String.valueOf(category.get("id"));
+//                CategoryEntity categoryEntity = realm.where(CategoryEntity.class).equalTo("id", id).findFirst();
+//                if(categoryEntity == null) {
+//                    //chek if categoryEntity is null then create new realm object and store title and id in the database
+//                    categoryEntity = realm.createObject(CategoryEntity.class);
+//                    categoryEntity.updateWithData(category);
+//                }
+//            }
+
+        Type listType = new TypeToken<ArrayList<CategoryPostEntity>>() {}.getType();
+        beanPostArrayList = new GsonBuilder().create().fromJson(String.valueOf(response), listType);
+        realm.beginTransaction();
+        for (CategoryPostEntity post : beanPostArrayList) {
+            String id = String.valueOf(post.getId());
+            CategoryEntity categoryEntity = realm.where(CategoryEntity.class).equalTo("id", id).findFirst();
+            if (categoryEntity == null) {
+                categoryEntity = realm.createObject(CategoryEntity.class);
+                categoryEntity.setCategoryimage(category_image_urls[index]);
+                categoryEntity.updateWithGsonData((post));
+                index++;
+
             }
-            realm.commitTransaction();
-            adapterforcategorylist.updateData();
-
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
+        realm.commitTransaction();
+        adapterforcategorylist.updateData();
     }
-
     private void showpDialog() {
         //show the process dialog
-        if (!pDialog.isShowing())
-            pDialog.show();
+        if(showdialog == 0) {
+            if (!pDialog.isShowing())
+                pDialog.show();
+        }
     }
-
     private void hidepDialog() {
         //hide thye process dialog
-        if (pDialog.isShowing())
-            pDialog.dismiss();
+        if(showdialog == 0) {
+            if (pDialog.isShowing())
+                pDialog.dismiss();
+        }
+        mSwipeRefreshLayout.setRefreshing(false);
     }
-
     @Override
     protected void onResume() {
         super.onResume();
 
-        //get the streamname and streamurl from the SharedRadioClass which is set in streamlistclass
-        streamname = SharedRadioClass.getMysingleobject().streamname;
-        streamurl = SharedRadioClass.getMysingleobject().url;
+        //get the streamname and streamurl from the SettingsManager which is set in streamlistclass
+        streamname = SettingsManager.getSharedInstance().streamname;
+        streamurl = SettingsManager.getSharedInstance().url;
 
-        if(streamurl != null && streamname != null){
+        if(streamname != null){
             imageviewforstreamimage = (ImageView) findViewById(R.id.imageViewforstreamimage);
             textviewforstreamname = (TextView) findViewById(R.id.textViewforstreamname);
             textviewforstreamname.setText(streamname);
-            if (streamurl != null) {
-                String url = streamurl;
-                if (url == null) {
-                    URI uri1;
+            String url = streamurl;
+            if (url == null) {
+                URI defaultUri;
                     try {
                         // set the default image if image not available in the database
-                        uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                        Picasso.with(MainActivity.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageviewforstreamimage);
+                        defaultUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                        Picasso.with(MainActivity.this).load(String.valueOf(defaultUri)).resize(60, 60).centerCrop().into(imageviewforstreamimage);
                     } catch (URISyntaxException e) {
                         e.printStackTrace();
                     }
@@ -201,13 +299,13 @@ public class MainActivity extends AppCompatActivity{
                         e.printStackTrace();
                     }
                 }
-            }
+
             //by default pause image show when the activity is shown
             imageButtonforplaypause = (ImageButton)findViewById(R.id.imageButtonforplayandpause);
             imageButtonforplaypause.setImageResource(R.drawable.pause);
 
             //get the setmediaplayervalue which is set in the RadioService class for handle play and pause button
-            checkmediaplayervalue = SharedRadioClass.getMysingleobject().setmediaplayervalue;
+            checkmediaplayervalue = SettingsManager.getSharedInstance().setmediaplayervalue;
             if(checkmediaplayervalue == 1)
             {
                 imageButtonforplaypause.setImageResource(R.drawable.pause);
@@ -250,11 +348,10 @@ public class MainActivity extends AppCompatActivity{
 
         }
     }
-
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         //set the play and pause button when the activity is open and play and pause change in the notificatio panel
-        setmadiavalueonpause = SharedRadioClass.getMysingleobject().setvaluewhenonpause;
+        setmadiavalueonpause = SettingsManager.getSharedInstance().setvaluewhenonpause;
         if(hasFocus)
         {
             if(setmadiavalueonpause == 1)
@@ -268,5 +365,15 @@ public class MainActivity extends AppCompatActivity{
                 imageButtonforplaypause.setImageResource(R.drawable.play1);
             }
         }
+    }
+    @Override
+    public void startService() {}
+    @Override
+    public void onRefresh() {
+        showdialog = 1;
+        pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Please wait...");
+        pDialog.setCancelable(false);
+        makeJsonArrayRequest();
     }
 }

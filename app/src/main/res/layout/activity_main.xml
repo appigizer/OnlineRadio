@@ -5,53 +5,59 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#f3f3f3"
     tools:context="com.example.mjstudio.internetradio.MainActivity">
-
     <include
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar"
         > </include>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="@color/colorPrimary"
-        android:orientation="horizontal"
-        android:layout_below="@+id/tool_bar"
-        android:id="@+id/rel"
-        >
-        <TextView
-            android:layout_width="320dp"
-            android:text="category"
-            android:textStyle="bold"
-            android:paddingLeft="15dp"
-            android:paddingTop="10dp"
-            android:textColor="#fff"
-            android:layout_gravity="center"
-            android:textAllCaps="true"
-            android:layout_height="40dp"
-            android:id="@+id/textViewfor_toolbarcategoryname">
-        </TextView>
+    <!--<LinearLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="40dp"-->
+        <!--android:background="@color/colorPrimary"-->
+        <!--android:orientation="horizontal"-->
+        <!--android:layout_below="@+id/tool_bar"-->
+        <!--android:id="@+id/rel"-->
+        <!--&gt;-->
+        <!--&lt;!&ndash;<TextView&ndash;&gt;-->
+            <!--&lt;!&ndash;android:layout_width="320dp"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:text="category"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:textStyle="bold"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:paddingLeft="15dp"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:paddingTop="10dp"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:textColor="#fff"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:layout_gravity="center"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:textAllCaps="true"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:layout_height="40dp"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:id="@+id/textViewfor_toolbarcategoryname">&ndash;&gt;-->
+        <!--&lt;!&ndash;</TextView>&ndash;&gt;-->
 
-        <ImageView
-            android:layout_gravity="center"
-            android:layout_width="30dp"
-            android:src="@drawable/refresh"
-            android:layout_height="25dp"
-            android:id="@+id/imageViewfor_songimage" />
-    </LinearLayout>
+        <!--<ImageView-->
+            <!--android:layout_gravity="center"-->
+            <!--android:layout_width="30dp"-->
+            <!--android:src="@drawable/refresh"-->
+            <!--android:layout_height="25dp"-->
+            <!--android:id="@+id/imageViewfor_songimage" />-->
+    <!--</LinearLayout>-->
 
     <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_below="@+id/rel"
+        android:layout_width="wrap_content"
+        android:layout_below="@+id/tool_bar"
         android:layout_height="wrap_content">
-        <ListView
-            android:id="@+id/listViewforcategories"
-            android:scrollbars="none"
-            android:padding="10dp"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            >
-        </ListView>
+            android:layout_marginTop="10dp"
+            android:layout_height="500dp">
+
+        <android.support.v7.widget.RecyclerView
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+
+            android:id="@+id/listViewforcategories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        </android.support.v4.widget.SwipeRefreshLayout>
     </RelativeLayout>
 
     <RelativeLayout

@@ -11,6 +11,7 @@ import io.realm.RealmObject;
 public class CategoryEntity extends RealmObject {
     private String id;
     private String title;
+    private  String categoryimage;
 
     public String getId ()
     {
@@ -27,10 +28,23 @@ public class CategoryEntity extends RealmObject {
     {
         this.title = title;
     }
+    public String getCategoryimage ()
+    {
+        return categoryimage;
+    }
+    public void setCategoryimage (String categoryimage) {
+        this.categoryimage = categoryimage;
+    }
 
-    public void updateWithData(Map<String, Object> map){
+//   public void updateWithData(Map<String, Object> map){
+//        CategoryEntity categoryEntity = this;
+//        categoryEntity.setId(String.valueOf(map.get("id")));
+//        categoryEntity.setTitle((String) map.get("title"));
+//    }
+
+    public void updateWithGsonData(CategoryPostEntity post) {
         CategoryEntity categoryEntity = this;
-        categoryEntity.setId(String.valueOf(map.get("id")));
-        categoryEntity.setTitle((String) map.get("title"));
+        categoryEntity.setId(post.getId());
+        categoryEntity.setTitle(post.getTitle());
     }
 }

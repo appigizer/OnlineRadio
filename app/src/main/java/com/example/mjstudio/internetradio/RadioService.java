@@ -15,21 +15,18 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 
-public class RadioService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-        MediaPlayer.OnCompletionListener {
-
-    String streamurl,position,streamname,categoryName;
+public class RadioService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+    StreamEntity streamEntity;
+    String streamurl,streamname,categoryName;
     int out=0;
     Notification notification;
     int categoryidforstartstream;
-    RealmResults<StreamEntity> databaseresults;
     Realm realm;
 
     private MediaPlayer player = new MediaPlayer();
@@ -38,31 +35,18 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-    public  void  startMusicPlayer()
-    {
-        //set the alertbox value for alertdialog if stream is not playing
-        SharedRadioClass.getMysingleobject().alertbox = 0;
-
-        //initialize the database
-        realm = Realm.getDefaultInstance();
-
-        //get all the data of the perticular id
-        databaseresults = realm.where(StreamEntity.class).equalTo("catid",position).findAll();
-        streamurl = databaseresults.get(categoryidforstartstream).getStreamurl();
-        streamname = databaseresults.get(categoryidforstartstream).getStreamname();
+    public  void  startMusicPlayer() {
+        SettingsManager.getSharedInstance().alertbox = 0;
         out=1;
-
         if (player.isPlaying()) {
             player.stop();
             player.reset();
-
         } else
             player.reset();
         try {
-
-            player.setDataSource(streamurl);
-
+            if (streamurl != null){
+                player.setDataSource(streamurl);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -74,8 +58,8 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
         //stop the playing stream when click on the pause button in the notification panel
         if(player.isPlaying())
             player.pause();
-        SharedRadioClass.getMysingleobject().setmediaplayervalue = 0;
-        SharedRadioClass.getMysingleobject().setvaluewhenonpause = 0;
+        SettingsManager.getSharedInstance().setmediaplayervalue = 0;
+        SettingsManager.getSharedInstance().setvaluewhenonpause = 0;
         RemoteViews views = new RemoteViews(getPackageName(),
                 R.layout.status_bar);
         RemoteViews bigViews = new RemoteViews(getPackageName(),
@@ -119,17 +103,14 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
         views.setOnClickPendingIntent(R.id.status_bar_collapse, pcloseIntent);
         bigViews.setOnClickPendingIntent(R.id.status_bar_collapse, pcloseIntent);
-
         views.setImageViewResource(R.id.status_bar_play,
                 R.drawable.apollo_holo_dark_play);
         bigViews.setImageViewResource(R.id.status_bar_play,
                 R.drawable.apollo_holo_dark_play);
         views.setTextViewText(R.id.status_bar_track_name, "Internet Radio");
         bigViews.setTextViewText(R.id.status_bar_track_name, "Internet Radio");
-
         views.setTextViewText(R.id.status_bar_artist_name, streamname);
         bigViews.setTextViewText(R.id.status_bar_artist_name, streamname);
-
         bigViews.setTextViewText(R.id.status_bar_album_name, categoryName);
 
         notification = new Notification.Builder(this).build();
@@ -139,15 +120,13 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
         notification.icon = R.drawable.radio;
         notification.contentIntent = pendingIntent;
         startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE, notification);
-
-
     }
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void playmediaplayer(){
         //play the playing stream when click on the play button in the notification panel
         player.start();
-        SharedRadioClass.getMysingleobject().setvaluewhenonpause = 1;
-        SharedRadioClass.getMysingleobject().setmediaplayervalue = 1;
+        SettingsManager.getSharedInstance().setvaluewhenonpause = 1;
+        SettingsManager.getSharedInstance().setmediaplayervalue = 1;
 
         RemoteViews views = new RemoteViews(getPackageName(),
                 R.layout.status_bar);
@@ -206,12 +185,9 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
         views.setTextViewText(R.id.status_bar_track_name, "Internet Radio");
         bigViews.setTextViewText(R.id.status_bar_track_name, "Internet Radio");
-
         views.setTextViewText(R.id.status_bar_artist_name, streamname);
         bigViews.setTextViewText(R.id.status_bar_artist_name, streamname);
-
         bigViews.setTextViewText(R.id.status_bar_album_name, categoryName);
-
         notification = new Notification.Builder(this).build();
         notification.contentView = views;
         notification.bigContentView = bigViews;
@@ -224,52 +200,57 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        realm = Realm.getDefaultInstance();
+        streamEntity = SettingsManager.getSharedInstance().selectedStreamEntity;
+        if (streamEntity != null){
+            streamurl = streamEntity.getStreamurl();
+            streamname = streamEntity.getStreamname();
+            String categoryId = streamEntity.getCatId();
+            if (categoryId != null){
+                CategoryEntity categoryEntity = realm.where(CategoryEntity.class).equalTo("id", categoryId).findFirst();
+                if (categoryEntity != null){
+                    categoryName = categoryEntity.getTitle();
+                }
+            }
 
-        if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
-            //get the category index send from the streamlistclass
-            position = intent.getStringExtra("setvaluecategory");
-            categoryName = intent.getStringExtra("categoryName");
-            //get the streamlist item index send from the streamlistclass
+            if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
+
             categoryidforstartstream = intent.getIntExtra("position", 0);
-            if (categoryidforstartstream == -1 && out ==1)
+                if (categoryidforstartstream == -1 && out ==1)
                 playmediaplayer();
             else if (categoryidforstartstream == -2 && out == 1)
-                pausePlayer();
-            else {
+                    pausePlayer();
+                else
                 initRadioPlayer();
-                Toast.makeText(this, "please wait stream is preparing...", Toast.LENGTH_SHORT).show();
+//
+            } else if (intent.getAction().equals(Constants.ACTION.PREV_ACTION)) {
+
+
+            } else if (intent.getAction().equals(Constants.ACTION.PLAY_ACTION)) {
+                if (player.isPlaying()) {
+                    //notification panel action for pause the player
+                    pausePlayer();
+                } else {
+                    //notification panel action for play the player
+                    playmediaplayer();
+                }
+
+            } else if (intent.getAction().equals(Constants.ACTION.NEXT_ACTION)) {
+
+            } else if (intent.getAction().equals(Constants.ACTION.STOPFOREGROUND_ACTION)) {
+                //cancel the the notififation from notfication panel  when click on the close button
+                stopForeground(true);
+                //stop the service
+                stopSelf();
+                //get out of the app
+                System.exit(0);
             }
-        } else if (intent.getAction().equals(Constants.ACTION.PREV_ACTION)) {
-
-
-        } else if (intent.getAction().equals(Constants.ACTION.PLAY_ACTION)) {
-            if(player.isPlaying()) {
-                //notification panel action for pause the player
-                pausePlayer();
-            }
-            else
-            {
-                //notification panel action for play the player
-               playmediaplayer() ;
-            }
-
-        } else if (intent.getAction().equals(Constants.ACTION.NEXT_ACTION)) {
-
-        } else if (intent.getAction().equals(Constants.ACTION.STOPFOREGROUND_ACTION)) {
-           //cancel the the notififation from notfication panel  when click on the close button
-            stopForeground(true);
-            //stop the service
-            stopSelf();
-            //get out of the app
-            System.exit(0);
         }
         return START_NOT_STICKY;
     }
 
     @Override
-    public void onCompletion(MediaPlayer mediaPlayer) {
-
-    }
+    public void onCompletion(MediaPlayer mediaPlayer) {}
     //phonestatelistner when the incoming and dialing phone calls on that time  pause the player
     PhoneStateListener phoneStateListener = new PhoneStateListener() {
         @Override
@@ -309,8 +290,8 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         //set the alertbox value for alertdialog if stream is playing
-        SharedRadioClass.getMysingleobject().alertbox = 1;
-       //start the player
+        SettingsManager.getSharedInstance().alertbox = 1;
+        //start the player
         mediaPlayer.start();
 
         TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);

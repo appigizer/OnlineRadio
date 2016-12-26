@@ -7,31 +7,32 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -40,23 +41,25 @@ import io.realm.RealmResults;
  * Created by mjstudio on 12/12/16.
  */
 
-public class StreamList extends AppCompatActivity {
+public class StreamList extends AppCompatActivity implements ArrayStationAdapter.OnItemClickListener{
     Intent intent;
-    public String category_id, categorynamefor, streamurlforstream, streamurlindex,streamurlname, streamname,streamurl;
+    public String category_id, categoryImage, streamurlforstream, streamurlindex,streamurlname, streamname,streamurl,categoryTitle;
     StreamEntity streamsEntity;
     Realm realm;
     int toogleforplaypausebutton = 0, redimagefornotplayingsong =0, checkforalertbox, checkforplayerisonoroff,setmadiavalueonpause;
     ImageView imageviewforimageandtitle;
-    RealmResults<StreamEntity> databaseresults, databaselayoutresult, databasestreamsresult;
+    RealmResults<StreamEntity> databaseresults, databasestreamsresult;
     private ProgressDialog pDialog;
     ArrayStationAdapter stationAdapter;
     RelativeLayout layout1forimageandtitle;
-    ListView listViewforstreamtitleandimage;
+    ImageView imageViewforCategory;
     TextView textviewforstreamtitle;
     ImageButton imageButtonforplaypause;
     private Toolbar toolbar;
     String globalUrl;
+    TextView textView;
     AlertDialog alertDialog;
+    public  boolean onclickListner,alertdialoghandle = true;
 
 
     @Override
@@ -71,17 +74,22 @@ public class StreamList extends AppCompatActivity {
         //get streamname and streamurl send by the MainActivityClass
         intent = getIntent();
         category_id = intent.getStringExtra("Categoryindex");
-        categorynamefor = intent.getStringExtra("Categoryname");
-
+        categoryImage = intent.getStringExtra("Categoryname");
+        categoryTitle = intent.getStringExtra("title");
         //set the category name in toolbar
-        final TextView textView = (TextView)findViewById(R.id.textViewfor_toolbarcategoryname);
-        textView.setText(categorynamefor);
+         textView = (TextView)findViewById(R.id.toolbar_title);
 
-        //initialize the SharedRadioClass
-        SharedRadioClass.getMysingleobject().context = this;
+
+        imageViewforCategory = (ImageView) findViewById(R.id.imgToolbar);
+        layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+
+
+        //initialize the SettingsManager
+        SettingsManager.getSharedInstance().context = this;
+
 
         //set the toolbar
-        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the databaselayoutresult to the toolbar object
+        toolbar = (Toolbar) findViewById(R.id.technique_three_toolbar); // Attaching the databaselayoutresult to the toolbar object
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -93,6 +101,7 @@ public class StreamList extends AppCompatActivity {
         });
 
         //handle the play and pause button
+
         imageButtonforplaypause = (ImageButton)findViewById(R.id.imageButtonforplayandpauseimage);
         imageButtonforplaypause.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,10 +125,13 @@ public class StreamList extends AppCompatActivity {
             }
         });
 
-        //initialize listview and the set the adapter
-        listViewforstreamtitleandimage = (ListView) findViewById(R.id.listViewforshowingstreamsname);
+        RecyclerView rv = (RecyclerView)findViewById(R.id.listViewforshowingstreamsname);
+        rv.setHasFixedSize(true);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        rv.setLayoutManager(layoutManager);
         stationAdapter = new ArrayStationAdapter(this,category_id);
-        listViewforstreamtitleandimage.setAdapter(stationAdapter);
+        stationAdapter.listener =  this;
+        rv.setAdapter(stationAdapter);
 
         imageviewforimageandtitle = (ImageView)findViewById(R.id.imageViewforstreamimage);
         textviewforstreamtitle = (TextView)findViewById(R.id.textViewforstreamname);
@@ -129,7 +141,7 @@ public class StreamList extends AppCompatActivity {
         databasestreamsresult = realm.where(StreamEntity.class).equalTo("catid", category_id).findAll();
         if(databasestreamsresult.isEmpty())
         {
-            globalUrl = SharedRadioClass.getMysingleobject().globalurl;
+            globalUrl = SettingsManager.getSharedInstance().globalurl;
             streamurlforstream = globalUrl+"category/"+category_id + "/stations?token=3d4764dcfedc50c561564a45d1";
             pDialog = new ProgressDialog(this);
             pDialog.setMessage("Please wait...");
@@ -139,129 +151,174 @@ public class StreamList extends AppCompatActivity {
     }
     @Override
     protected void onResume() {
-        listViewforstreamtitleandimage.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                //get the database result
-                databaselayoutresult =  realm.where(StreamEntity.class).equalTo("catid",category_id).findAll();
-                streamurlindex = databaselayoutresult.get(i).getImageurl();
-                streamurlname = databaselayoutresult.get(i).getStreamname();
-                redimagefornotplayingsong = i;
+        // listViewforstreamtitleandimage.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        // @Override
+        // public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                //set the streamurl and name in Sharedclass url and streamname
-                SharedRadioClass.getMysingleobject().url= streamurlindex;
-                SharedRadioClass.getMysingleobject().streamname= streamurlname;
+        //get the database result
+//                databaselayoutresult =  realm.where(StreamEntity.class).equalTo("catid",category_id).findAll();
+//        onclickListner = SettingsManager.getSharedInstance().onclicklistner;
+//        if (onclickListner == true) {
+//            streamurlindex = SettingsManager.getSharedInstance().url;
+//            streamurlname = SettingsManager.getSharedInstance().streamname;
+//
+////                redimagefornotplayingsong = i;
+//
+////               // set the streamurl and name in Sharedclass url and streamname
+////                SettingsManager.getSharedInstance().url= streamurlindex;
+////                SettingsManager.getSharedInstance().streamname= streamurlname;
+//
+//            textviewforstreamtitle.setText(streamurlname);
+//
+//            //set the onclick listner false textview and imageview of the  layout1forimageandtitle
+//            textviewforstreamtitle.setOnClickListener(null);
+//            imageviewforimageandtitle.setOnClickListener(null);
+//
+//            if (streamurlindex != null) {
+//                String url = streamurlindex;
+//
+//                if (url == null) {
+//                    URI uri1;
+//                    try {
+//                        uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
+//                        Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+//                    } catch (URISyntaxException e) {
+//                        e.printStackTrace();
+//                    }
+//                } else {
+//                    try {
+//                        URI uri = new URI(streamurlindex);
+//                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+//
+//                    } catch (URISyntaxException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//            //show the layout when the stream is playing
+//            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+//            layout1forimageandtitle.setVisibility(View.VISIBLE);
+//
+//            imageButtonforplaypause.setImageResource(R.drawable.pause);
+//
+//            //call the service with the sending the listview item poition and category id and also set the action which is done in notification panel
+////                Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",i).putExtra("setvaluecategory",category_id).putExtra("categoryName",categorynamefor);
+////                serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+////                startService(serviceIntent);
+//
+//            //show the dialog box after 10 seconds if stream is not playing
+//            Handler handler = new Handler();
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if (!((StreamList.this).isFinishing())) {
+//                        //get the value of alertbox and check
+//                        checkforalertbox = SettingsManager.getSharedInstance().alertbox;
+//                        if (checkforalertbox == 0) {
+//                            //call the alertdialog function
+//                            activeProgressDialog();
+//                            //set the red image on the rightside of the listview item for wich stream which is not playing
+////                                SettingsManager.getSharedInstance().redimageurl = redimagefornotplayingsong;
+////                                SettingsManager.getSharedInstance().category = Integer.parseInt(category_id);
+////                                stationAdapter.updateData();
+//                        }
+//                    }
+//                }
+//            }, 10000);
+//        }
+            // }
+            //});
+            //get the streamname and imageurl showing in the layout with play and pause button
+        textView.setText(categoryTitle);
+        if (categoryImage != null) {
+            final String url = categoryImage;
 
-                textviewforstreamtitle.setText(streamurlname);
+            if (url == null) {
 
-                //set the onclick listner false textview and imageview of the  layout1forimageandtitle
-                textviewforstreamtitle.setOnClickListener(null);
-                imageviewforimageandtitle.setOnClickListener(null);
+                try {
+                    URI defaultImage;
+                    defaultImage = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                    Picasso.with(StreamList.this).load(String.valueOf(defaultImage)).into(imageViewforCategory);
 
-                if (databaselayoutresult != null) {
-                    String url = streamurlindex;
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    URI uri = new URI(categoryImage);
+                   // Picasso.with(StreamList.this).load(String.valueOf(uri)).into(imageViewforCategory);
+                    URI defaultUrl =  new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                    Picasso.with(StreamList.this)
+                            .load(String.valueOf(defaultUrl)) // thumbnail url goes here
+                            .into(imageViewforCategory, new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    Picasso.with(StreamList.this)
+                                            .load(url) // image url goes here
+                                            .placeholder(imageViewforCategory.getDrawable())
+                                            .into(imageViewforCategory);
+                                }
+                                @Override
+                                public void onError() {
+
+                                }
+                            });
+
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        streamname = SettingsManager.getSharedInstance().streamname;
+        streamurl = SettingsManager.getSharedInstance().url;
+
+            if (streamname != null) {
+                imageviewforimageandtitle = (ImageView) findViewById(R.id.imageViewforstreamimage);
+                textviewforstreamtitle = (TextView) findViewById(R.id.textViewforstreamname);
+
+                textviewforstreamtitle.setText(streamname);
+                String url = streamurl;
 
                     if (url == null) {
-                        URI uri1;
+                        URI defaultUri;
                         try {
-                            uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                            Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+                            defaultUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                            Picasso.with(StreamList.this).load(String.valueOf(defaultUri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
                         } catch (URISyntaxException e) {
                             e.printStackTrace();
                         }
                     } else {
                         try {
-                            URI uri = new URI(streamurlindex);
+                            URI uri = new URI(streamurl);
                             Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
 
                         } catch (URISyntaxException e) {
                             e.printStackTrace();
                         }
                     }
-                }
-                //show the layout when the stream is playing
-                layout1forimageandtitle =  (RelativeLayout)findViewById(R.id.layoutforhandlingplayandpause);
+
+
+                textviewforstreamtitle.setOnClickListener(null);
+                imageviewforimageandtitle.setOnClickListener(null);
+
+                layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
                 layout1forimageandtitle.setVisibility(View.VISIBLE);
 
-                imageButtonforplaypause.setImageResource(R.drawable.pause);
+                //get the checkforplayerisonoroff value which is set in the service class for handle the play and pause button
+                checkforplayerisonoroff = SettingsManager.getSharedInstance().setmediaplayervalue;
+                if (checkforplayerisonoroff == 1) {
+                    imageButtonforplaypause.setImageResource(R.drawable.pause);
 
-                //call the service with the sending the listview item poition and category id and also set the action which is done in notification panel
-                Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",i).putExtra("setvaluecategory",category_id).putExtra("categoryName",categorynamefor);
-                serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                startService(serviceIntent);
-
-                //show the dialog box after 10 seconds if stream is not playing
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(!((StreamList.this).isFinishing())) {
-                            //get the value of alertbox and check
-                            checkforalertbox = SharedRadioClass.getMysingleobject().alertbox;
-                            if(checkforalertbox == 0) {
-                                //call the alertdialog function
-                                activeProgressDialog();
-                                //set the red image on the rightside of the listview item for wich stream which is not playing
-                                SharedRadioClass.getMysingleobject().redimageurl = redimagefornotplayingsong;
-                                SharedRadioClass.getMysingleobject().category = Integer.parseInt(category_id);
-                                stationAdapter.updateData();
-                            }
-                        }
-                    }
-                },10000);
-            }
-        });
-        //get the streamname and imageurl showing in the layout with play and pause button
-        streamname = SharedRadioClass.getMysingleobject().streamname;
-        streamurl = SharedRadioClass.getMysingleobject().url;
-
-        if(streamurl != null && streamname != null){
-            imageviewforimageandtitle = (ImageView) findViewById(R.id.imageViewforstreamimage);
-            textviewforstreamtitle = (TextView) findViewById(R.id.textViewforstreamname);
-
-            textviewforstreamtitle.setText(streamname);
-            if (streamurl != null) {
-                String url = streamurl;
-
-                if (url == null) {
-                    URI uri1;
-                    try {
-                        uri1 = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                        Picasso.with(StreamList.this).load(String.valueOf(uri1)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        URI uri = new URI(streamurl);
-                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
-
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
+                } else if (checkforplayerisonoroff == 0) {
+                    imageButtonforplaypause.setImageResource(R.drawable.play1);
                 }
             }
 
-            textviewforstreamtitle.setOnClickListener(null);
-            imageviewforimageandtitle.setOnClickListener(null);
+            super.onResume();
 
-            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
-            layout1forimageandtitle.setVisibility(View.VISIBLE);
-
-            //get the checkforplayerisonoroff value which is set in the service class for handle the play and pause button
-            checkforplayerisonoroff = SharedRadioClass.getMysingleobject().setmediaplayervalue;
-            if(checkforplayerisonoroff == 1)
-            {
-                imageButtonforplaypause.setImageResource(R.drawable.pause);
-
-            }
-            else if(checkforplayerisonoroff ==0)
-            {
-                imageButtonforplaypause.setImageResource(R.drawable.play1);
-            }
-        }
-        super.onResume();
     }
     public void makeJsonArrayRequest(String streamurl) {
         //show the processdialog before fetching the json data fron server
@@ -285,8 +342,6 @@ public class StreamList extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 VolleyLog.d("error", "Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_SHORT).show();
                 hidepDialog();
             }
         });
@@ -341,13 +396,18 @@ public class StreamList extends AppCompatActivity {
         dialog.setMessage("Stream not Available.....");
         dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+                if(alertdialoghandle == false) {
+                    dialog.dismiss();
+                    alertdialoghandle = true;
+                }
             }
         });
         dialog.setCancelable(false);
         alertDialog = dialog.create();
-        Log.d("value","dat321"+checkforalertbox);
-        alertDialog.show();
+        if(alertdialoghandle == true) {
+            alertDialog.show();
+            alertdialoghandle = false;
+        }
     }
 
     @Override
@@ -363,7 +423,8 @@ public class StreamList extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         //set the play and pause button when the activity is open and play and pause change in the notificatio panel
-        setmadiavalueonpause = SharedRadioClass.getMysingleobject().setvaluewhenonpause;
+
+        setmadiavalueonpause = SettingsManager.getSharedInstance().setvaluewhenonpause;
         if(hasFocus)
         {
             if(setmadiavalueonpause == 1)
@@ -375,8 +436,67 @@ public class StreamList extends AppCompatActivity {
             {
                 imageButtonforplaypause = (ImageButton)findViewById(R.id.imageButtonforplayandpauseimage);
                 imageButtonforplaypause.setImageResource(R.drawable.play1);
-
             }
+        }
+
+    }
+
+    @Override
+    public void startService() {
+        onclickListner = SettingsManager.getSharedInstance().onclicklistner;
+        if (onclickListner == true) {
+            streamurlindex = SettingsManager.getSharedInstance().url;
+            streamurlname = SettingsManager.getSharedInstance().streamname;
+            textviewforstreamtitle.setText(streamurlname);
+
+            //set the onclick listner false textview and imageview of the  layout1forimageandtitle
+            textviewforstreamtitle.setOnClickListener(null);
+            imageviewforimageandtitle.setOnClickListener(null);
+            String url = streamurlindex;
+
+            if (url == null) {
+                    URI defaulUri;
+                    try {
+                        defaulUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                        Picasso.with(StreamList.this).load(String.valueOf(defaulUri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+                    } catch (URISyntaxException e) {
+                        e.printStackTrace();
+                    }
+            } else {
+                    try {
+                        URI uri = new URI(streamurlindex);
+                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+
+                    } catch (URISyntaxException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            //show the layout when the stream is playing
+            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+            layout1forimageandtitle.setVisibility(View.VISIBLE);
+
+            imageButtonforplaypause.setImageResource(R.drawable.pause);
+
+            //show the dialog box after 10 seconds if stream is not playing
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!((StreamList.this).isFinishing())) {
+                        //get the value of alertbox and check
+                        checkforalertbox = SettingsManager.getSharedInstance().alertbox;
+                        if (checkforalertbox == 0) {
+                            //call the alertdialog function
+                            activeProgressDialog();
+                            //set the red image on the rightside of the listview item for wich stream which is not playing
+                                SettingsManager.getSharedInstance().redimageurl = redimagefornotplayingsong;
+                                SettingsManager.getSharedInstance().category = Integer.parseInt(category_id);
+                                stationAdapter.updateData();
+                        }
+                    }
+                }
+            }, 10000);
         }
     }
 }

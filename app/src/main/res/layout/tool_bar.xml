@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.Toolbar
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:navigationIcon="?attr/homeAsUpIndicator"
     android:background="@color/colorPrimary">
     <TextView
@@ -12,6 +12,8 @@
         android:textColor="#fff"
         android:textSize="20dp"
         android:textStyle="bold"
+        app:layout_collapseMode="pin"
+        app:layout_scrollFlags="scroll|enterAlways"
         android:layout_gravity="center"
         android:id="@+id/toolbar_title" />
 </android.support.v7.widget.Toolbar>
