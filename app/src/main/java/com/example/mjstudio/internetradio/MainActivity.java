@@ -3,8 +3,12 @@ package com.example.mjstudio.internetradio;
 
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.app.UiModeManager;
+import android.content.Context;
 import android.content.Intent;
 
+import android.content.res.Configuration;
+import android.provider.Settings;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +22,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -44,6 +49,7 @@ import java.util.ArrayList;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+
 
 public class MainActivity extends AppCompatActivity implements AdapterCategory.OnItemClickListener,SwipeRefreshLayout.OnRefreshListener{
 
@@ -132,7 +138,8 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
     "https://cdn.devality.com/station/38253/STR_Logo_Square-300x300.jpg",
     "https://cdn.devality.com/station/38742/New_HOB.jpg"};
     int toogleforplaypausebutton = 0, checkmediaplayervalue,setmadiavalueonpause,index=0,showdialog;
-    RecyclerView recyclerView;
+    public RecyclerView recyclerView;
+
 
     private SwipeRefreshLayout mSwipeRefreshLayout;
     @Override
@@ -143,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
         mSwipeRefreshLayout.setOnRefreshListener(MainActivity.this);
         //initialize the realm database
         realm = Realm.getDefaultInstance();
-
         //initialize the toobar
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         if(toolbar != null) {
@@ -154,10 +160,7 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
         ImageLoader.getInstance().init(config);
 
-        //initialize listview and set the adapter
-//        listviewforcategorylist = (ListView)findViewById(R.id.listViewforcategories);
-//        adapterforcategorylist = new AdapterCategory(this);
-//        listviewforcategorylist.setAdapter(adapterforcategorylist);
+
         recyclerView = (RecyclerView)findViewById(R.id.listViewforcategories);
         recyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),3);
@@ -165,9 +168,6 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
         adapterforcategorylist = new AdapterCategory(this);
         adapterforcategorylist.listenerCategory =  this;
         recyclerView.setAdapter(adapterforcategorylist);
-
-
-
 
         //get database results and check if data is not available in database then call the volley liabrary for getting the jsondata and put in database first time
         //next time get data from database
@@ -180,16 +180,6 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
             makeJsonArrayRequest();
         }
 
-//        //By clicking on the category name go to the streamlist activity with the category index,name
-//        listviewforcategorylist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                categoryindex = databaseresults.get(i).getId().toString();
-//                categoryname = databaseresults.get(i).getTitle().toString();
-//                startActivity(new Intent(MainActivity.this,StreamList.class).putExtra("Categoryindex", categoryindex)
-//                        .putExtra("Categoryname", categoryname));
-//            }
-//        });
 
     }
     public void makeJsonArrayRequest() {
@@ -320,6 +310,10 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
             imageviewforstreamimage.setOnClickListener(null);
 
             //after set the streamname and image show the layout if name and image available
+
+            ViewGroup.LayoutParams params=mSwipeRefreshLayout.getLayoutParams();
+            params.height=1000;
+            mSwipeRefreshLayout.setLayoutParams(params);
             layoutforstreamimageandname = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
             layoutforstreamimageandname.setVisibility(View.VISIBLE);
 

@@ -22,59 +22,7 @@ import java.net.URISyntaxException;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-//public class AdapterCategory extends BaseAdapter {
-//    private LayoutInflater songInf;
-//    Realm realm;
-//    RealmResults<CategoryEntity> categoryList;
-//
-//    public AdapterCategory(Activity activity) {
-//        realm = Realm.getDefaultInstance();
-//        updateData();
-//    }
-//
-//    public void updateData(){
-//        categoryList = realm.where(CategoryEntity.class).findAll();
-//        notifyDataSetChanged();
-//    }
-//
-//    @Override
-//    public int getCount() {
-//
-//        return categoryList.size();
-//    }
-//
-//    @Override
-//    public Object getItem(int arg0) {
-//
-//        return null;
-//    }
-//
-//    @Override
-//    public long getItemId(int arg0) {
-//
-//        return 0;
-//    }
-//
-//    @Override
-//    public View getView(int position, View convertView, ViewGroup parent) {
-//
-//        songInf=LayoutInflater.from(parent.getContext());
-//        LinearLayout songLay = (LinearLayout) songInf.inflate(R.layout.category, parent, false);
-//
-//        TextView songView = (TextView)songLay.findViewById(R.id.textViewfor_categoriesname);
-//        CategoryEntity categoryEntity = categoryList.get(position);
-//
-//        if (categoryEntity != null){
-//            Log.d("URL", "URLid" + categoryEntity.getTitle());
-//            songView.setText(categoryEntity.getTitle());
-//        }
-//        //set position as tag
-//        songLay.setTag(position);
-//        return songLay;
-//    }
-//}
 public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHolder> {
-
 
 
     public interface OnItemClickListener extends ArrayStationAdapter.OnItemClickListener {
@@ -176,21 +124,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
                         URI uri = new URI(categoryEntity.getCategoryimage());
                         URI defaultUrl =  new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQp74qov_puy-0apTKqr6TrZvwGMnrAgfR0ovtzqPVmAir_3LOY");
                        imageLoader.displayImage(url,imgageForCategory,options);
-//                        Picasso.with(itemView.getContext())
-//                                .load(String.valueOf(defaultUrl)) // thumbnail url goes here
-//                                .into(imgageForCategory, new Callback() {
-//                                    @Override
-//                                    public void onSuccess() {
-//                                        Picasso.with(itemView.getContext())
-//                                                .load(url) // image url goes here
-//                                                .placeholder(imgageForCategory.getDrawable())
-//                                                .into(imgageForCategory);
-//                                    }
-//                                    @Override
-//                                    public void onError() {
-//
-//                                    }
-//                                });
+
                     } catch (URISyntaxException e) {
                         e.printStackTrace();
                     }

@@ -259,6 +259,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
                 //Incoming call: Pause music
                 player.pause();
             } else if(state == TelephonyManager.CALL_STATE_IDLE) {
+                
                 //Not in call: Play music
                 player.start();
             } else if(state == TelephonyManager.CALL_STATE_OFFHOOK) {

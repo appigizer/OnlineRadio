@@ -13,6 +13,7 @@ import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -77,7 +78,7 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
         categoryImage = intent.getStringExtra("Categoryname");
         categoryTitle = intent.getStringExtra("title");
         //set the category name in toolbar
-         textView = (TextView)findViewById(R.id.toolbar_title);
+        textView = (TextView)findViewById(R.id.toolbar_title);
 
 
         imageViewforCategory = (ImageView) findViewById(R.id.imgToolbar);
@@ -227,9 +228,9 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
 //                }
 //            }, 10000);
 //        }
-            // }
-            //});
-            //get the streamname and imageurl showing in the layout with play and pause button
+        // }
+        //});
+        //get the streamname and imageurl showing in the layout with play and pause button
         textView.setText(categoryTitle);
         if (categoryImage != null) {
             final String url = categoryImage;
@@ -247,10 +248,8 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
             } else {
                 try {
                     URI uri = new URI(categoryImage);
-                   // Picasso.with(StreamList.this).load(String.valueOf(uri)).into(imageViewforCategory);
-                    URI defaultUrl =  new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
                     Picasso.with(StreamList.this)
-                            .load(String.valueOf(defaultUrl)) // thumbnail url goes here
+                            .load(R.drawable.backgroundicon)
                             .into(imageViewforCategory, new Callback() {
                                 @Override
                                 public void onSuccess() {
@@ -275,50 +274,48 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
         streamname = SettingsManager.getSharedInstance().streamname;
         streamurl = SettingsManager.getSharedInstance().url;
 
-            if (streamname != null) {
-                imageviewforimageandtitle = (ImageView) findViewById(R.id.imageViewforstreamimage);
-                textviewforstreamtitle = (TextView) findViewById(R.id.textViewforstreamname);
+        if (streamname != null) {
+            imageviewforimageandtitle = (ImageView) findViewById(R.id.imageViewforstreamimage);
+            textviewforstreamtitle = (TextView) findViewById(R.id.textViewforstreamname);
 
-                textviewforstreamtitle.setText(streamname);
-                String url = streamurl;
+            textviewforstreamtitle.setText(streamname);
+            String url = streamurl;
 
-                    if (url == null) {
-                        URI defaultUri;
-                        try {
-                            defaultUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
-                            Picasso.with(StreamList.this).load(String.valueOf(defaultUri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
-                        } catch (URISyntaxException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        try {
-                            URI uri = new URI(streamurl);
-                            Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+            if (url == null) {
+                URI defaultUri;
+                try {
+                    defaultUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                    Picasso.with(StreamList.this).load(String.valueOf(defaultUri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    URI uri = new URI(streamurl);
+                    Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
 
-                        } catch (URISyntaxException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-
-                textviewforstreamtitle.setOnClickListener(null);
-                imageviewforimageandtitle.setOnClickListener(null);
-
-                layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
-                layout1forimageandtitle.setVisibility(View.VISIBLE);
-
-                //get the checkforplayerisonoroff value which is set in the service class for handle the play and pause button
-                checkforplayerisonoroff = SettingsManager.getSharedInstance().setmediaplayervalue;
-                if (checkforplayerisonoroff == 1) {
-                    imageButtonforplaypause.setImageResource(R.drawable.pause);
-
-                } else if (checkforplayerisonoroff == 0) {
-                    imageButtonforplaypause.setImageResource(R.drawable.play1);
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
                 }
             }
 
-            super.onResume();
 
+            textviewforstreamtitle.setOnClickListener(null);
+            imageviewforimageandtitle.setOnClickListener(null);
+
+            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+            layout1forimageandtitle.setVisibility(View.VISIBLE);
+
+            //get the checkforplayerisonoroff value which is set in the service class for handle the play and pause button
+            checkforplayerisonoroff = SettingsManager.getSharedInstance().setmediaplayervalue;
+            if (checkforplayerisonoroff == 1) {
+                imageButtonforplaypause.setImageResource(R.drawable.pause);
+
+            } else if (checkforplayerisonoroff == 0) {
+                imageButtonforplaypause.setImageResource(R.drawable.play1);
+            }
+        }
+        super.onResume();
     }
     public void makeJsonArrayRequest(String streamurl) {
         //show the processdialog before fetching the json data fron server
@@ -348,7 +345,6 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
         // Adding request to request queue
         MyApplication.getInstance().addToRequestQueue(req);
     }
-
     private void handleJsonResponse(JSONArray response) {
         try {
             ArrayList<Map<String, Object>> mapArrayList = (ArrayList<Map<String, Object>>) JSonHelper.toList(response);
@@ -382,12 +378,10 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
         if (pDialog.isShowing())
             pDialog.dismiss();
     }
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
     }
-
     protected void activeProgressDialog() {
 
         AlertDialog.Builder dialog = new AlertDialog.Builder(StreamList.this, R.style.dialog);
@@ -409,17 +403,14 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
             alertdialoghandle = false;
         }
     }
-
     @Override
     protected void onPause() {
         super.onPause();
     }
-
     @Override
     public void onStop() {
         super.onStop();
     }
-
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         //set the play and pause button when the activity is open and play and pause change in the notificatio panel
@@ -440,7 +431,6 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
         }
 
     }
-
     @Override
     public void startService() {
         onclickListner = SettingsManager.getSharedInstance().onclicklistner;
@@ -448,36 +438,33 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
             streamurlindex = SettingsManager.getSharedInstance().url;
             streamurlname = SettingsManager.getSharedInstance().streamname;
             textviewforstreamtitle.setText(streamurlname);
-
             //set the onclick listner false textview and imageview of the  layout1forimageandtitle
             textviewforstreamtitle.setOnClickListener(null);
             imageviewforimageandtitle.setOnClickListener(null);
             String url = streamurlindex;
-
             if (url == null) {
-                    URI defaulUri;
-                    try {
-                        defaulUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
-                        Picasso.with(StreamList.this).load(String.valueOf(defaulUri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
-            } else {
-                    try {
-                        URI uri = new URI(streamurlindex);
-                        Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
-
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
+                URI defaulUri;
+                try {
+                    defaulUri = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
+                    Picasso.with(StreamList.this).load(String.valueOf(defaulUri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
                 }
-
+            } else {
+                try {
+                    URI uri = new URI(streamurlindex);
+                    Picasso.with(StreamList.this).load(String.valueOf(uri)).resize(60, 60).centerCrop().into(imageviewforimageandtitle);
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
             //show the layout when the stream is playing
+//            ViewGroup.LayoutParams params=mSwipeRefreshLayout.getLayoutParams();
+//            params.height=1020;
+//            mSwipeRefreshLayout.setLayoutParams(params);
             layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
             layout1forimageandtitle.setVisibility(View.VISIBLE);
-
             imageButtonforplaypause.setImageResource(R.drawable.pause);
-
             //show the dialog box after 10 seconds if stream is not playing
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
@@ -490,9 +477,9 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
                             //call the alertdialog function
                             activeProgressDialog();
                             //set the red image on the rightside of the listview item for wich stream which is not playing
-                                SettingsManager.getSharedInstance().redimageurl = redimagefornotplayingsong;
-                                SettingsManager.getSharedInstance().category = Integer.parseInt(category_id);
-                                stationAdapter.updateData();
+                            SettingsManager.getSharedInstance().redimageurl = redimagefornotplayingsong;
+                            SettingsManager.getSharedInstance().category = Integer.parseInt(category_id);
+                            stationAdapter.updateData();
                         }
                     }
                 }
