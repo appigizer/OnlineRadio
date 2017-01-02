@@ -3,6 +3,7 @@ package com.example.mjstudio.internetradio;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -29,6 +30,7 @@ import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -47,7 +49,7 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
     public String category_id, categoryImage, streamurlforstream, streamurlindex,streamurlname, streamname,streamurl,categoryTitle;
     StreamEntity streamsEntity;
     Realm realm;
-    int toogleforplaypausebutton = 0, redimagefornotplayingsong =0, checkforalertbox, checkforplayerisonoroff,setmadiavalueonpause;
+    int toogleforplaypausebutton = 0, redimagefornotplayingsong =0, checkforalertbox, checkforplayerisonoroff,setmadiavalueonpause,first;
     ImageView imageviewforimageandtitle;
     RealmResults<StreamEntity> databaseresults, databasestreamsresult;
     private ProgressDialog pDialog;
@@ -61,6 +63,7 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
     TextView textView;
     AlertDialog alertDialog;
     public  boolean onclickListner,alertdialoghandle = true;
+
 
 
     @Override
@@ -240,7 +243,7 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
                 try {
                     URI defaultImage;
                     defaultImage = new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK");
-                    Picasso.with(StreamList.this).load(String.valueOf(defaultImage)).into(imageViewforCategory);
+                    Picasso.with(StreamList.this).load(String.valueOf(defaultImage)).centerCrop().into(imageViewforCategory);
 
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
@@ -256,6 +259,8 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
                                     Picasso.with(StreamList.this)
                                             .load(url) // image url goes here
                                             .placeholder(imageViewforCategory.getDrawable())
+                                            .resize(1200,500)
+                                            .centerCrop()
                                             .into(imageViewforCategory);
                                 }
                                 @Override
@@ -273,6 +278,27 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
 
         streamname = SettingsManager.getSharedInstance().streamname;
         streamurl = SettingsManager.getSharedInstance().url;
+        if(streamname == null) {
+            imageButtonforplaypause.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (first == 0) {
+                        ((ImageButton) v).setImageResource(R.drawable.play1);
+                        first = 1;
+                        Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position", -2);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    } else if (first == 1) {
+                        ((ImageButton) v).setImageResource(R.drawable.pause);
+                        first = 0;
+
+                        Intent serviceIntent = new Intent(StreamList.this, RadioService.class).putExtra("position",-1).putExtra("first",-5);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    }
+                }
+            });
+        }
 
         if (streamname != null) {
             imageviewforimageandtitle = (ImageView) findViewById(R.id.imageViewforstreamimage);
@@ -435,6 +461,8 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
     public void startService() {
         onclickListner = SettingsManager.getSharedInstance().onclicklistner;
         if (onclickListner == true) {
+
+
             streamurlindex = SettingsManager.getSharedInstance().url;
             streamurlname = SettingsManager.getSharedInstance().streamname;
             textviewforstreamtitle.setText(streamurlname);
@@ -462,8 +490,8 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
 //            ViewGroup.LayoutParams params=mSwipeRefreshLayout.getLayoutParams();
 //            params.height=1020;
 //            mSwipeRefreshLayout.setLayoutParams(params);
-            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
-            layout1forimageandtitle.setVisibility(View.VISIBLE);
+//            layout1forimageandtitle = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+//            layout1forimageandtitle.setVisibility(View.VISIBLE);
             imageButtonforplaypause.setImageResource(R.drawable.pause);
             //show the dialog box after 10 seconds if stream is not playing
             Handler handler = new Handler();

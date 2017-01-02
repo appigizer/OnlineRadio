@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.content.res.Configuration;
+import android.media.MediaPlayer;
 import android.provider.Settings;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -28,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -42,6 +44,7 @@ import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
     TextView textviewforstreamname;
     ImageView imageviewforstreamimage;
     ImageButton imageButtonforplaypause;
+    private MediaPlayer mediaPlayer;
     private final String category_image_urls[] = {"https://cdn.devality.com/station/38654/influx_radio_2.jpg",
     "https://cdn.devality.com/station/38920/Pirate_Radio_BIG_Color.jpg",
     "https://cdn.devality.com/station/38899/90s90s_hits_600x600.png",
@@ -137,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
     "https://cdn.devality.com/station/38492/radio-logo.jpg",
     "https://cdn.devality.com/station/38253/STR_Logo_Square-300x300.jpg",
     "https://cdn.devality.com/station/38742/New_HOB.jpg"};
-    int toogleforplaypausebutton = 0, checkmediaplayervalue,setmadiavalueonpause,index=0,showdialog;
+    int toogleforplaypausebutton = 0, checkmediaplayervalue,setmadiavalueonpause,index=0,showdialog,first=1;
     public RecyclerView recyclerView;
 
 
@@ -146,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setOnRefreshListener(MainActivity.this);
         //initialize the realm database
@@ -163,11 +168,23 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
 
         recyclerView = (RecyclerView)findViewById(R.id.listViewforcategories);
         recyclerView.setHasFixedSize(true);
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),3);
-        recyclerView.setLayoutManager(layoutManager);
-        adapterforcategorylist = new AdapterCategory(this);
-        adapterforcategorylist.listenerCategory =  this;
-        recyclerView.setAdapter(adapterforcategorylist);
+        if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+        {
+            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),3);
+            recyclerView.setLayoutManager(layoutManager);
+            adapterforcategorylist = new AdapterCategory(this);
+            adapterforcategorylist.listenerCategory =  this;
+            recyclerView.setAdapter(adapterforcategorylist);
+            // Portrait Mode
+        } else {
+            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(),4);
+            recyclerView.setLayoutManager(layoutManager);
+            adapterforcategorylist = new AdapterCategory(this);
+            adapterforcategorylist.listenerCategory =  this;
+            recyclerView.setAdapter(adapterforcategorylist);
+            // Landscape Mode
+        }
+
 
         //get database results and check if data is not available in database then call the volley liabrary for getting the jsondata and put in database first time
         //next time get data from database
@@ -179,6 +196,8 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
             pDialog.setCancelable(false);
             makeJsonArrayRequest();
         }
+
+
 
 
     }
@@ -260,11 +279,32 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
     }
     @Override
     protected void onResume() {
-        super.onResume();
+
 
         //get the streamname and streamurl from the SettingsManager which is set in streamlistclass
         streamname = SettingsManager.getSharedInstance().streamname;
         streamurl = SettingsManager.getSharedInstance().url;
+        if(streamname == null) {
+            imageButtonforplaypause = (ImageButton) findViewById(R.id.imageButtonforplayandpause);
+            imageButtonforplaypause.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (first == 0) {
+                        ((ImageButton) v).setImageResource(R.drawable.play1);
+                        first = 1;
+                        Intent serviceIntent = new Intent(MainActivity.this, RadioService.class).putExtra("position", -2);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    } else if (first == 1) {
+                        ((ImageButton) v).setImageResource(R.drawable.pause);
+                        first = 0;
+                        Intent serviceIntent = new Intent(MainActivity.this, RadioService.class).putExtra("position",-1).putExtra("first",-5);
+                        serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                        startService(serviceIntent);
+                    }
+                }
+            });
+        }
 
         if(streamname != null){
             imageviewforstreamimage = (ImageView) findViewById(R.id.imageViewforstreamimage);
@@ -312,10 +352,10 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
             //after set the streamname and image show the layout if name and image available
 
             ViewGroup.LayoutParams params=mSwipeRefreshLayout.getLayoutParams();
-            params.height=1000;
-            mSwipeRefreshLayout.setLayoutParams(params);
-            layoutforstreamimageandname = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
-            layoutforstreamimageandname.setVisibility(View.VISIBLE);
+//            params.height=1000;
+//            mSwipeRefreshLayout.setLayoutParams(params);
+//            layoutforstreamimageandname = (RelativeLayout) findViewById(R.id.layoutforhandlingplayandpause);
+//            layoutforstreamimageandname.setVisibility(View.VISIBLE);
 
             //imagebutton for play and pause stream
             imageButtonforplaypause.setOnClickListener(new View.OnClickListener() {
@@ -341,6 +381,7 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
             });
 
         }
+        super.onResume();
     }
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -370,4 +411,5 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
         pDialog.setCancelable(false);
         makeJsonArrayRequest();
     }
+
 }

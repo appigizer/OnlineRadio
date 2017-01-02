@@ -14,6 +14,8 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.squareup.picasso.Picasso;
 
 import java.net.URI;
@@ -97,6 +99,7 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
     public class ViewHolder extends RecyclerView.ViewHolder{
         private TextView textViewforCategoryName;
         private ImageView imgageForCategory;
+        String url;
         public ViewHolder(View view) {
             super(view);
 
@@ -109,28 +112,40 @@ public class AdapterCategory extends RecyclerView.Adapter<AdapterCategory.ViewHo
 
 
             if (categoryEntity!= null) {
-                final String url = categoryEntity.getCategoryimage();
+                url = categoryEntity.getCategoryimage();
                 if (url == null) {
-                    URI defaultUri;
-                    try {
-                        defaultUri = new URI("https://cdn.devality.com/station/38392/logo.gif");
-                        Picasso.with(itemView.getContext()).
-                                load(String.valueOf(defaultUri)).into(imgageForCategory);
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        URI uri = new URI(categoryEntity.getCategoryimage());
-                        URI defaultUrl =  new URI("https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQp74qov_puy-0apTKqr6TrZvwGMnrAgfR0ovtzqPVmAir_3LOY");
-                       imageLoader.displayImage(url,imgageForCategory,options);
 
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
+                    String defaulturi = "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQCxumxjDnEtPCvN-_gVUbcELLnEj36_BJGJk5KsWTH5itj1saK";
+                    imageLoader.displayImage(defaulturi, imgageForCategory, options);
+                } else {
+
+                    imageLoader.displayImage(url, imgageForCategory, options, new ImageLoadingListener() {
+                        public void onLoadingStarted(String imageUri, View view) {
+                            imgageForCategory.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+                        }
+
+                        @Override
+                        public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+                            imgageForCategory.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+                        }
+
+                        @Override
+                        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                            imgageForCategory.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        }
+
+                        @Override
+                        public void onLoadingCancelled(String imageUri, View view) {
+                            imgageForCategory.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                        }
+                    });
+
+
                 }
+            }
             }
         }
     }
 
-}

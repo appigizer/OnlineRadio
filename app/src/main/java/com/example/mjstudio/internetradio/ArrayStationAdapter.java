@@ -86,6 +86,7 @@ public class ArrayStationAdapter extends RecyclerView.Adapter<ArrayStationAdapte
                 SettingsManager.getSharedInstance().selectedStreamEntity = streams;
                 SettingsManager.getSharedInstance().url = streamurl;
                 SettingsManager.getSharedInstance().streamname = streamname;
+
                 Intent serviceIntent = new Intent(context, RadioService.class);
                 serviceIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
                 context.startService(serviceIntent);

@@ -23,15 +23,17 @@
         <android.support.v7.widget.RecyclerView
             android:paddingLeft="5dp"
             android:paddingRight="5dp"
+            android:paddingBottom="60dp"
             android:id="@+id/listViewforcategories"
             android:layout_width="match_parent"
+
             android:layout_height="wrap_content"/>
         </android.support.v4.widget.SwipeRefreshLayout>
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:visibility="gone"
+
         android:id="@+id/layoutforhandlingplayandpause"
         android:background="@color/colorAccent"
         android:layout_alignParentBottom="true">
@@ -46,6 +48,7 @@
             android:focusableInTouchMode="false"
             android:paddingLeft="20dp"
             android:textStyle="bold"
+            android:text="Tranccetechnic"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true" />
         <ImageView
@@ -55,6 +58,7 @@
             android:id="@+id/imageViewforstreamimage"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
+            android:src="@drawable/bajiraomastani"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
@@ -63,6 +67,7 @@
             android:layout_height="60dp"
             android:id="@+id/imageButtonforplayandpause"
             android:paddingTop="5dp"
+            android:src="@drawable/play1"
             android:background="@color/colorAccent"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"

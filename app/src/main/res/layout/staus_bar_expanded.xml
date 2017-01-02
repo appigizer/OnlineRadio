@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout android:id="@+id/notificationbg" android:layout_width="fill_parent" android:layout_height="128dp"
+    android:background="@color/cardview_dark_background"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ImageView
@@ -16,6 +17,7 @@
         android:id="@+id/buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@color/cardview_dark_background"
         android:divider="?android:listDivider"
         android:layout_toRightOf="@id/status_bar_album_art"
         android:layout_alignParentRight="true"
@@ -70,6 +72,7 @@
         android:id="@+id/textarea"
         android:paddingLeft="@dimen/notification_padding"
         android:paddingTop="8.0dip"
+        android:background="@color/cardview_dark_background"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@id/status_bar_collapse"

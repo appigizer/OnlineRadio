@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -24,7 +25,7 @@ import io.realm.RealmResults;
 public class RadioService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
     StreamEntity streamEntity;
     String streamurl,streamname,categoryName;
-    int out=0;
+    int firsttime;
     Notification notification;
     int categoryidforstartstream;
     Realm realm;
@@ -35,9 +36,12 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
+
     public  void  startMusicPlayer() {
         SettingsManager.getSharedInstance().alertbox = 0;
-        out=1;
+
         if (player.isPlaying()) {
             player.stop();
             player.reset();
@@ -45,7 +49,13 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
             player.reset();
         try {
             if (streamurl != null){
+                Log.d("stream","stream===="+streamurl);
                 player.setDataSource(streamurl);
+            }
+            else {
+                player.setDataSource("http://109.169.46.197:8009/");
+                firsttime = -6;
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -124,6 +134,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void playmediaplayer(){
         //play the playing stream when click on the play button in the notification panel
+
         player.start();
         SettingsManager.getSharedInstance().setvaluewhenonpause = 1;
         SettingsManager.getSharedInstance().setmediaplayervalue = 1;
@@ -202,51 +213,59 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
     public int onStartCommand(Intent intent, int flags, int startId) {
         realm = Realm.getDefaultInstance();
         streamEntity = SettingsManager.getSharedInstance().selectedStreamEntity;
-        if (streamEntity != null){
+        if (streamEntity != null) {
+
             streamurl = streamEntity.getStreamurl();
             streamname = streamEntity.getStreamname();
             String categoryId = streamEntity.getCatId();
-            if (categoryId != null){
+            if (categoryId != null) {
                 CategoryEntity categoryEntity = realm.where(CategoryEntity.class).equalTo("id", categoryId).findFirst();
-                if (categoryEntity != null){
+                if (categoryEntity != null) {
                     categoryName = categoryEntity.getTitle();
                 }
             }
-
-            if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
+        }
+        Log.d("stream", "stream=====" + firsttime+""+categoryidforstartstream);
+        if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
 
             categoryidforstartstream = intent.getIntExtra("position", 0);
-                if (categoryidforstartstream == -1 && out ==1)
+            firsttime = intent.getIntExtra("first", 0);
+            if (categoryidforstartstream == -1 ) {
+               if(firsttime == -5)
+                   initRadioPlayer();
                 playmediaplayer();
-            else if (categoryidforstartstream == -2 && out == 1)
-                    pausePlayer();
-                else
-                initRadioPlayer();
-//
-            } else if (intent.getAction().equals(Constants.ACTION.PREV_ACTION)) {
-
-
-            } else if (intent.getAction().equals(Constants.ACTION.PLAY_ACTION)) {
-                if (player.isPlaying()) {
-                    //notification panel action for pause the player
-                    pausePlayer();
-                } else {
-                    //notification panel action for play the player
-                    playmediaplayer();
-                }
-
-            } else if (intent.getAction().equals(Constants.ACTION.NEXT_ACTION)) {
-
-            } else if (intent.getAction().equals(Constants.ACTION.STOPFOREGROUND_ACTION)) {
-                //cancel the the notififation from notfication panel  when click on the close button
-                stopForeground(true);
-                //stop the service
-                stopSelf();
-                //get out of the app
-                System.exit(0);
             }
+            else if (categoryidforstartstream == -2 ) {
+
+                pausePlayer();
+            }
+            else
+                initRadioPlayer();
+
+        } else if (intent.getAction().equals(Constants.ACTION.PREV_ACTION)) {
+
+
+        } else if (intent.getAction().equals(Constants.ACTION.PLAY_ACTION)) {
+            if (player.isPlaying()) {
+                //notification panel action for pause the player
+                pausePlayer();
+            } else {
+                //notification panel action for play the player
+                playmediaplayer();
+            }
+
+        } else if (intent.getAction().equals(Constants.ACTION.NEXT_ACTION)) {
+
+        } else if (intent.getAction().equals(Constants.ACTION.STOPFOREGROUND_ACTION)) {
+            //cancel the the notififation from notfication panel  when click on the close button
+            stopForeground(true);
+            //stop the service
+            stopSelf();
+            //get out of the app
+            System.exit(0);
         }
-        return START_NOT_STICKY;
+
+        return START_STICKY;
     }
 
     @Override
@@ -259,7 +278,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
                 //Incoming call: Pause music
                 player.pause();
             } else if(state == TelephonyManager.CALL_STATE_IDLE) {
-                
+
                 //Not in call: Play music
                 player.start();
             } else if(state == TelephonyManager.CALL_STATE_OFFHOOK) {
