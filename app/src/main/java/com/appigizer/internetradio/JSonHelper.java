@@ -1,4 +1,4 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 /**
  * Created by mjstudio on 12/12/16.

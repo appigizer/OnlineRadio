@@ -1,50 +1,37 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 
 import android.app.ProgressDialog;
-import android.app.SearchManager;
-import android.app.UiModeManager;
-import android.content.Context;
 import android.content.Intent;
-
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
-import android.provider.Settings;
-import android.support.v4.view.MenuItemCompat;
+import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.example.mjstudio.internetradio.R;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.miguelcatalan.materialsearchview.MaterialSearchView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;

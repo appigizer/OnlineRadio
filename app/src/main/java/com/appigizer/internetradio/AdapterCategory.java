@@ -1,4 +1,4 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 
 import android.app.Activity;
@@ -12,14 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.mjstudio.internetradio.R;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
-import com.squareup.picasso.Picasso;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import io.realm.Realm;
 import io.realm.RealmResults;

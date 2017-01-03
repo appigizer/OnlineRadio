@@ -1,4 +1,4 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 import java.util.Map;
 

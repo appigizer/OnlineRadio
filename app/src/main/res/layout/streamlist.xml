@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/coordinate"
-        tools:context="com.example.mjstudio.internetradio.MainActivity">
+        tools:context="com.appigizer.internetradio.MainActivity">
         <android.support.design.widget.AppBarLayout
             android:id="@+id/my_appbar_container"
             android:layout_width="match_parent"

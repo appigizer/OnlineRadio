@@ -1,4 +1,4 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -17,9 +17,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import com.example.mjstudio.internetradio.R;
 
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 
 public class RadioService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {

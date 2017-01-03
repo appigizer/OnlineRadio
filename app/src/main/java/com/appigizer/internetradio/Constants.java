@@ -1,8 +1,10 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
+import com.example.mjstudio.internetradio.R;
 
 public class Constants {
     public interface ACTION {

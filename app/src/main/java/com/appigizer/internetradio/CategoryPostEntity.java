@@ -1,4 +1,4 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 import com.google.gson.annotations.SerializedName;
 public class CategoryPostEntity {

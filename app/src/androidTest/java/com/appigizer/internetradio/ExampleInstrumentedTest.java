@@ -1,4 +1,4 @@
-package com.example.mjstudio.internetradio;
+package com.appigizer.internetradio;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
