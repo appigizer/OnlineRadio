@@ -17,7 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import com.example.mjstudio.internetradio.R;
+import com.appigizer.internetradio.R;
 
 import io.realm.Realm;
 

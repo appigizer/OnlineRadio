@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.mjstudio.internetradio" >
+    package="com.appigizer.internetradio" >
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -18,7 +18,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
-        <activity android:name="com.example.mjstudio.internetradio.MainActivity">
+        <activity android:name="com.appigizer.internetradio.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,15 +26,15 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".RadioService"
+            android:name="RadioService"
             android:enabled="true">
             <intent-filter>
-                <action android:name="com.example.mjstudio.internetradio.RadioService"
+                <action android:name="com.appigizer.internetradio.RadioService"
                     />
             </intent-filter>
         </service>
         <activity
-            android:name="com.example.mjstudio.internetradio.StreamList"
+            android:name="com.appigizer.internetradio.StreamList"
             >
             <intent-filter>
                 <action android:name="com.package.name.StreamList" />

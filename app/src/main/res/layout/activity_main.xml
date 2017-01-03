@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
-    tools:context="com.example.mjstudio.internetradio.MainActivity">
+    tools:context="com.appigizer.internetradio.MainActivity">
     <include
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar"

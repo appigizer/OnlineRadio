@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.mjstudio.internetradio.R;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
@@ -50,7 +49,7 @@ public class ArrayStationAdapter extends RecyclerView.Adapter<ArrayStationAdapte
         options = new DisplayImageOptions.Builder()
                 .showImageOnLoading(R.drawable.backgroundicon)
                 .showImageForEmptyUri(R.drawable.backgroundicon)
-                .showImageOnFail(R.drawable.backgroundicon)
+                .showImageOnFail(com.appigizer.internetradio.R.drawable.backgroundicon)
                 .cacheInMemory(true)
                 .cacheOnDisk(true)
                 .considerExifParams(true)
