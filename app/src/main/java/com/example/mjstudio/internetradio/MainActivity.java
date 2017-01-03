@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements AdapterCategory.O
         if(showdialog == 0)
         showpDialog();
         globalUrl = SettingsManager.getSharedInstance().globalurl;
-        String urlJsonArry = globalUrl+"categories?token=3d4764dcfedc50c561564a45d1";
+        String urlJsonArry = globalUrl+"categories?token=" + SettingsManager.getSharedInstance().DIRBLE_TOKEN;
         JsonArrayRequest req = new JsonArrayRequest(urlJsonArry,
                 new Response.Listener<JSONArray>() {
                     @Override

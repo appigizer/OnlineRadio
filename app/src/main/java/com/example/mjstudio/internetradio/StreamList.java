@@ -65,7 +65,6 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
     public  boolean onclickListner,alertdialoghandle = true;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -146,7 +145,9 @@ public class StreamList extends AppCompatActivity implements ArrayStationAdapter
         if(databasestreamsresult.isEmpty())
         {
             globalUrl = SettingsManager.getSharedInstance().globalurl;
-            streamurlforstream = globalUrl+"category/"+category_id + "/stations?token=3d4764dcfedc50c561564a45d1";
+            //please use your api like me 8d1f218f3e0fcb5c3efc7d01c7
+            //PUT_YOUR_OWN_DIRBLE_TOKEN_HERE dirble.com/
+            streamurlforstream = globalUrl+"category/"+category_id + "/stations?token=" + SettingsManager.getSharedInstance().DIRBLE_TOKEN;
             pDialog = new ProgressDialog(this);
             pDialog.setMessage("Please wait...");
             pDialog.setCancelable(false);

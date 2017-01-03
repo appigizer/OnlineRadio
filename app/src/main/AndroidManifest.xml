@@ -27,7 +27,6 @@
         </activity>
         <service
             android:name=".RadioService"
-            android:exported="false"
             android:enabled="true">
             <intent-filter>
                 <action android:name="com.example.mjstudio.internetradio.RadioService"
