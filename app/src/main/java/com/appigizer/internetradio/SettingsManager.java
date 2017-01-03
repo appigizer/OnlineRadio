@@ -16,7 +16,7 @@ public class SettingsManager {
     public  int setvaluewhenonpause = -1;
     public  boolean onclicklistner = false;
     public  String globalurl ="http://api.dirble.com/v2/";
-    public String DIRBLE_TOKEN = "8d1f218f3e0fcb5c3efc7d01c7"; //PUT_YOUR_OWN_DIRBLE_TOKEN_HERE";//8d1f218f3e0fcb5c3efc7d01c7";
+    public String DIRBLE_TOKEN = PUT_YOUR_OWN_DIRBLE_TOKEN_HERE; //e.g. "8d1f218f3e0fcb5c3efc7d01c7"
     private SettingsManager() {
 
     }
